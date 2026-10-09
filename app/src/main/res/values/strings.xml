@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">تقویم شیفت</string>
+    <string name="app_subtitle">تقویم هوشمند شیفت و کارکرد</string>
+    <string name="widget_description">تاریخ و نوبت کاری امروز</string>
+</resources>

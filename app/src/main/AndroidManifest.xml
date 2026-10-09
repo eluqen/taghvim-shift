@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <application android:name=".EluqenApp" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" tools:targetApi="33" android:enableOnBackInvokedCallback="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:localeConfig="@xml/locales_config" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
+        <activity android:exported="false" android:name=".ui.WidgetSettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.ShiftTypesActivity"/>
+        <activity android:exported="false" android:name=".ui.ReminderSettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.FeatureHubActivity"/>
+        <activity android:exported="false" android:name=".ui.RootPreviewWarmupActivity" android:theme="@style/PreviewWarmupTheme"/>
+        <activity android:exported="false" android:name=".ui.GeneralSettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.ThemeSettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.PlannerActivity"/>
+        <activity android:exported="false" android:name=".ui.TodoListActivity"/>
+        <activity android:exported="false" android:name=".ui.NotebookActivity"/>
+        <activity android:exported="false" android:name=".ui.AboutActivity"/>
+        <activity android:exported="false" android:name=".ui.UpdateCenterActivity"/>
+        <activity android:exported="false" android:name=".ui.FourShiftActivity"/>
+        <activity android:exported="false" android:name=".ui.ColleaguesActivity"/>
+        <activity android:exported="false" android:name=".ui.SettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.ToolsActivity"/>
+        <activity android:exported="false" android:name=".ui.WorkNoteActivity"/>
+        <activity android:exported="false" android:name=".ui.CardexActivity"/>
+        <activity android:exported="false" android:name=".ui.FirstRunActivity"/>
+        <activity android:exported="false" android:name=".ui.MainActivity"/>
+        <!-- Warmup-only aliases ensure Android's pre-onCreate starting window is
+             transparent from the instant each hidden root Activity is launched. -->
+        <activity-alias android:exported="false" android:name=".ui.WarmupCalendarAlias"
+            android:targetActivity=".ui.MainActivity"
+            android:theme="@style/PreviewWarmupTheme"/>
+        <activity-alias android:exported="false" android:name=".ui.WarmupFourShiftAlias"
+            android:targetActivity=".ui.FourShiftActivity"
+            android:theme="@style/PreviewWarmupTheme"/>
+        <activity-alias android:exported="false" android:name=".ui.WarmupCardexAlias"
+            android:targetActivity=".ui.CardexActivity"
+            android:theme="@style/PreviewWarmupTheme"/>
+        <activity-alias android:exported="false" android:name=".ui.WarmupSettingsAlias"
+            android:targetActivity=".ui.GeneralSettingsActivity"
+            android:theme="@style/PreviewWarmupTheme"/>
+        <activity-alias android:exported="false" android:name=".ui.WarmupFeaturesAlias"
+            android:targetActivity=".ui.FeatureHubActivity"
+            android:theme="@style/PreviewWarmupTheme"/>
+        <activity android:exported="true" android:name=".ui.LaunchActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <receiver android:exported="false" android:name=".ui.PersonalReceiver"/>
+        <receiver android:exported="false" android:name=".ui.PersonalRescheduleReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="false" android:name=".reminder.ShiftReminderReceiver"/>
+        <receiver android:exported="false" android:name=".reminder.ReminderActionReceiver"/>
+        <receiver android:exported="false" android:name=".reminder.ReminderRescheduleReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="false" android:icon="@mipmap/ic_launcher" android:label="ELUQEN Shift Board — ۴×۱" android:name=".widget.ShiftWidgetProviderLarge">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_large"/>
+        </receiver>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_file_paths"/>
+        </provider>
+    </application>
+</manifest>

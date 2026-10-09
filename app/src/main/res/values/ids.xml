@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="widget_date" />
+    <item type="id" name="widget_groups" />
+    <item type="id" name="widget_next" />
+    <item type="id" name="widget_plan" />
+    <item type="id" name="widget_root" />
+    <item type="id" name="widget_shift" />
+    <item type="id" name="widget_weekday" />
+    <item type="id" name="widget_hours" />
+    <item type="id" name="widget_reminder" />
+    <item type="id" name="widget_settings" />
+    <item type="id" name="widget_content" />
+    <item type="id" name="widget_spacer" />
+</resources>

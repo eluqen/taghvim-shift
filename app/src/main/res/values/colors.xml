@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#ffffb457</color>
+    <color name="holiday">#ffc84a64</color>
+    <color name="primary">#ff203a63</color>
+    <color name="primary_dark">#ff122541</color>
+    <color name="secondary">#ff108b86</color>
+    <color name="shift_day">#ffffb457</color>
+    <color name="shift_evening">#ffa36bd2</color>
+    <color name="shift_night">#ff6378d9</color>
+    <color name="shift_off">#ff108b86</color>
+    <color name="surface">#fff5f8fc</color>
+    <color name="surface_alt">#ffedf3fb</color>
+    <color name="text_primary">#ff182b45</color>
+    <color name="text_secondary">#ff5f7188</color>
+    <color name="icon_background">#fffdfdfd</color>
+</resources>

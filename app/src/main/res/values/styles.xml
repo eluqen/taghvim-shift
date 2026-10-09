@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/InstantActivityTransitions</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+    </style>
+    <style name="PreviewWarmupTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@style/InstantActivityTransitions</item>
+        <item name="android:colorAccent">@color/accent</item>
+    </style>
+    <style name="InstantActivityTransitions">
+        <item name="android:activityOpenEnterAnimation">@anim/instant</item>
+        <item name="android:activityOpenExitAnimation">@anim/instant</item>
+        <item name="android:activityCloseEnterAnimation">@anim/instant</item>
+        <item name="android:activityCloseExitAnimation">@anim/instant</item>
+        <item name="android:taskOpenEnterAnimation">@anim/instant</item>
+        <item name="android:taskOpenExitAnimation">@anim/instant</item>
+        <item name="android:taskCloseEnterAnimation">@anim/instant</item>
+        <item name="android:taskCloseExitAnimation">@anim/instant</item>
+    </style>
+</resources>

@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.13.0'
+    implementation 'androidx.work:work-runtime:2.11.2'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}
+
+def signingSecret = file(System.getenv('ELUQEN_KEYSTORE_PASSWORD_FILE') ?: 'NO_SIGNING_PASSWORD_PROVIDED')
+def signingStore = file(System.getenv('ELUQEN_KEYSTORE_PATH') ?: 'NO_SIGNING_KEY_PROVIDED')
+def canSignRelease = signingSecret.exists() && signingStore.exists()
+
+def releasePassword = canSignRelease ? signingSecret.getText('UTF-8').trim() : null
+
+android {
+    namespace 'com.eluqen.shiftcalendar'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.eluqen.shiftcalendar'
+        minSdk 23
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    flavorDimensions 'distribution'
+    productFlavors {
+        play { dimension 'distribution'; resValue 'string', 'build_channel', 'play' }
+    }
+
+    signingConfigs {
+        release {
+            if (canSignRelease) {
+                storeFile signingStore
+                storePassword releasePassword
+                keyAlias System.getenv('ELUQEN_KEY_ALIAS') ?: 'visual'
+                keyPassword releasePassword
+                enableV1Signing true
+                enableV2Signing true
+                enableV3Signing true
+                enableV4Signing false
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ''
+        }
+        release {
+            minifyEnabled false
+            if (canSignRelease) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError true
+    }
+}

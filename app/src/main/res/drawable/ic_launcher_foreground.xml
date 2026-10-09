@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.84" android:scaleY="0.84">
+    <!-- calendar shadow -->
+    <path android:fillColor="#28000000"
+        android:pathData="M32,20h53a7,7 0,0 1,7 7v51a7,7 0,0 1,-7 7h-53a7,7 0,0 1,-7 -7v-51a7,7 0,0 1,7 -7z"/>
+    <!-- calendar -->
+    <path android:fillColor="#138CCB"
+        android:pathData="M31,18h53a7,7 0,0 1,7 7v51a7,7 0,0 1,-7 7h-53a7,7 0,0 1,-7 -7v-51a7,7 0,0 1,7 -7z"/>
+    <path android:fillColor="#E4ECF3"
+        android:pathData="M28,35h63v41a7,7 0,0 1,-7 7h-53a7,7 0,0 1,-7 -7v-34a7,7 0,0 1,4 -7z"/>
+    <!-- rings -->
+    <path android:fillColor="#084A86" android:pathData="M37,12h7a4,4 0,0 1,4 4v13a4,4 0,0 1,-4 4h-7a4,4 0,0 1,-4 -4v-13a4,4 0,0 1,4 -4z"/>
+    <path android:fillColor="#1EA9D8" android:pathData="M38,11h5a3,3 0,0 1,3 3v13a3,3 0,0 1,-3 3h-5a3,3 0,0 1,-3 -3v-13a3,3 0,0 1,3 -3z"/>
+    <path android:fillColor="#084A86" android:pathData="M58,12h7a4,4 0,0 1,4 4v13a4,4 0,0 1,-4 4h-7a4,4 0,0 1,-4 -4v-13a4,4 0,0 1,4 -4z"/>
+    <path android:fillColor="#1EA9D8" android:pathData="M59,11h5a3,3 0,0 1,3 3v13a3,3 0,0 1,-3 3h-5a3,3 0,0 1,-3 -3v-13a3,3 0,0 1,3 -3z"/>
+    <path android:fillColor="#084A86" android:pathData="M77,12h7a4,4 0,0 1,4 4v13a4,4 0,0 1,-4 4h-7a4,4 0,0 1,-4 -4v-13a4,4 0,0 1,4 -4z"/>
+    <path android:fillColor="#1EA9D8" android:pathData="M78,11h5a3,3 0,0 1,3 3v13a3,3 0,0 1,-3 3h-5a3,3 0,0 1,-3 -3v-13a3,3 0,0 1,3 -3z"/>
+    <!-- checklist panels -->
+    <path android:fillColor="#D1E7E2" android:pathData="M57,42h16a3,3 0,0 1,3 3v8a3,3 0,0 1,-3 3h-16a3,3 0,0 1,-3 -3v-8a3,3 0,0 1,3 -3z"/>
+    <path android:fillColor="#D1E7E2" android:pathData="M57,58h16a3,3 0,0 1,3 3v8a3,3 0,0 1,-3 3h-16a3,3 0,0 1,-3 -3v-8a3,3 0,0 1,3 -3z"/>
+    <path android:fillColor="#D1E7E2" android:pathData="M57,74h16a3,3 0,0 1,3 3v3a3,3 0,0 1,-3 3h-16a3,3 0,0 1,-3 -3v-3a3,3 0,0 1,3 -3z"/>
+    <!-- large teal checks -->
+    <path android:fillColor="#0D7F7A" android:pathData="M57,47l4,4l8,-8l4,4l-12,12l-8,-8z"/>
+    <path android:fillColor="#0D7F7A" android:pathData="M57,63l4,4l8,-8l4,4l-12,12l-8,-8z"/>
+    <path android:fillColor="#0D7F7A" android:pathData="M57,77l4,4l8,-8l4,4l-12,12l-8,-8z"/>
+    <!-- alarm feet -->
+    <path android:fillColor="#095FA9" android:pathData="M23,86h7l-5,7h-5zM45,86h7l3,7h-6z"/>
+    <!-- bells -->
+    <path android:fillColor="#18A7D1" android:pathData="M23,55a8,6 0,1 1,13,-7l-13,7z"/>
+    <path android:fillColor="#18A7D1" android:pathData="M44,48a8,6 0,1 1,13,7l-13,-7z"/>
+    <!-- clock -->
+    <path android:fillColor="#095FA9" android:pathData="M37,55a19,19 0,1 1,0 38a19,19 0,1 1,0 -38"/>
+    <path android:fillColor="#E4ECF3" android:pathData="M37,59a15,15 0,1 1,0 30a15,15 0,1 1,0 -30"/>
+    <!-- clock marks -->
+    <path android:fillColor="#095FA9" android:pathData="M35,61h4v5h-4zM35,82h4v5h-4zM22,72h5v4h-5zM47,72h5v4h-5z"/>
+    <!-- hands -->
+    <path android:fillColor="#095FA9" android:pathData="M36,74l8,-9l3,3l-8,9zM36,74l8,9l-3,3l-8,-9z"/>
+    <path android:fillColor="#138CCB" android:pathData="M37,70a4,4 0,1 1,0 8a4,4 0,1 1,0 -8"/>
+    </group>
+</vector>
