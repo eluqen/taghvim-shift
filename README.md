@@ -1,15 +1,36 @@
-# ELUQEN Shift Calendar
+# ELUQEN Taghvim Shift
 
-Persian calendar and shift schedule for Android. Package: `com.eluqen.shiftcalendar`.
+An Android calendar and work-record companion for people on rotating shifts. The current app interface is in Persian.
 
-## Building the Google Play edition
+**Version:** 1.0.0
+**Application ID:** `com.eluqen.shiftcalendar`
+**Minimum Android version:** 6.0 (API 23)
 
-Install JDK 17 and Android SDK platform 36. Gradle is pinned by the included wrapper.
+## Features
+
+- Persian calendar with Gregorian and Hijri date references and calendar events
+- Configurable rotating shift patterns and a four-team monthly view
+- Daily work records for shift swaps, leave, rest and overtime
+- Shift reminders, personal tasks, notes and home-screen widget
+- Local backup and restore, and calendar (ICS) export
+
+## Official links
+
+- [Application overview](https://eluqen.com/apps/shift-calendar/)
+- [Website download](https://eluqen.com/fa/apps/shift-calendar/)
+- [Privacy policy](https://eluqen.com/apps/taghvim-shift/privacy-policy/)
+- [Support](mailto:dev@eluqen.com)
+
+This repository contains the source code for the **Google Play edition** of the Android application. Its APK uses Google Play for application updates. If you prefer to install and update the app directly from the ELUQEN website, use the website download above.
+
+## Build
+
+Prerequisites: JDK 17 and Android SDK Platform 36.
 
 ```sh
 ./gradlew :app:assemblePlayDebug :app:testPlayDebugUnitTest
 ```
 
-To produce a signed release, provide your own keystore through `ELUQEN_KEYSTORE_PATH`, `ELUQEN_KEYSTORE_PASSWORD_FILE` and optionally `ELUQEN_KEY_ALIAS`; never commit credentials or signing files. Google Play publishing requires a separately authorized release.
+On Windows, use `gradlew.bat` instead of `./gradlew`.
 
-The app provides calendar dates and events, rotating-shift scheduling, reminders, work records, notes, and widgets.
+Release signing uses private signing credentials. Never commit keystores, passwords, locally generated build outputs or other secrets.
