@@ -62,7 +62,7 @@ public final class FirstRunActivity extends Activity {
     boolean enabled=(Boolean)Class.forName("com.eluqen.shiftcalendar.data.Prefs").getMethod("reminderEnabled",android.content.Context.class).invoke(null,this);
     if(enabled)new Thread(()->{try{Class.forName("com.eluqen.shiftcalendar.reminder.ReminderScheduler").getMethod("sync",android.content.Context.class).invoke(null,this);}catch(Exception ignored){}},"eluqen-first-run-reminder").start();
    }catch(Exception ignored){}
-   Intent i=new Intent();i.setClassName(this,"com.eluqen.shiftcalendar.ui.MainActivity");i.putExtra("skip_default_screen",true);
+   Intent i=new Intent();i.setClassName(this,"com.eluqen.shiftcalendar.ui.LaunchActivity");
    startActivity(i);finish();
   }catch(Exception e){toast("خطا در تکمیل راه‌اندازی");android.util.Log.e("ELUQEN_FIRST","Complete",e);}
  }

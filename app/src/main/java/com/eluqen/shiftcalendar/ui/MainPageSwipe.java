@@ -30,7 +30,7 @@ final class MainPageSwipe {
     private static final class Session {
         float x, y, dx;
         int direction, width, height, fromTab, targetTab;
-        boolean active, blocked;
+        boolean active, blocked, previewMissing;
         FrameLayout viewport;
         View targetView;
         View content;
@@ -157,8 +157,10 @@ final class MainPageSwipe {
             if (s == null) return false;
 
             if (action == MotionEvent.ACTION_POINTER_DOWN || action == MotionEvent.ACTION_CANCEL) {
-                if (s.active) settle(activity, s, false);
-                else SESSIONS.remove(activity);
+                if (s.active) {
+                    if (s.previewMissing) cleanup(activity, s, true);
+                    else settle(activity, s, false);
+                } else SESSIONS.remove(activity);
                 return s.active;
             }
 
@@ -181,15 +183,24 @@ final class MainPageSwipe {
                         }
                         cancelChild(s.content, event);
                         if (!begin(activity, s)) {
-                            s.blocked = true;
-                            return false;
+                            // A missing snapshot must never disable navigation.
+                            // The destination will generate its real preview
+                            // after entering; do not fabricate a placeholder.
+                            s.previewMissing = true;
+                            s.active = true;
+                            BackDock.previewSwipe(activity, s.fromTab, s.targetTab, 0f);
                         }
                     }
                 }
 
                 if (s.active) {
                     if (dx * s.direction < 0) dx = 0;
-                    move(activity, s, dx);
+                    if (s.previewMissing) {
+                        BackDock.previewSwipe(activity, s.fromTab, s.targetTab,
+                                Math.min(1f, Math.abs(dx) / Math.max(1f, s.width)));
+                    } else {
+                        move(activity, s, dx);
+                    }
                     return true;
                 }
                 return false;
@@ -202,7 +213,13 @@ final class MainPageSwipe {
                 }
                 float dx = event.getRawX() - s.x;
                 boolean commit = Math.abs(dx) > s.width * .25f;
-                settle(activity, s, commit);
+                if (s.previewMissing) {
+                    int direction = s.direction;
+                    cleanup(activity, s, true);
+                    if (commit) BackDock.navigateRelative(activity, direction);
+                } else {
+                    settle(activity, s, commit);
+                }
                 return true;
             }
         } catch (Throwable error) {

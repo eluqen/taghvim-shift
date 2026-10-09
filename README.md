@@ -2,7 +2,7 @@
 
 An Android calendar and work-record companion for people on rotating shifts. The current app interface is in Persian.
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Application ID:** `com.eluqen.shiftcalendar`
 **Minimum Android version:** 6.0 (API 23)
 
