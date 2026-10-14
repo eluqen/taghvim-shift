@@ -2,6 +2,7 @@ package com.eluqen.shiftcalendar.data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.eluqen.shiftcalendar.update.InstallSourceDetector;
 import com.eluqen.shiftcalendar.update.UpdateSource;
 
 public final class Prefs {
@@ -55,7 +56,7 @@ public final class Prefs {
         SharedPreferences sharedPreferencesValues = values(context);
         return UpdateSource.fromKey(
                 sharedPreferencesValues.getString(UPDATE_SOURCE, ""),
-                UpdateSource.GOOGLE_PLAY);
+                UpdateSource.DIRECT);
     }
 
     private Prefs() {
@@ -96,13 +97,12 @@ public final class Prefs {
     }
 
     public static void ensureInitialInstallSource(Context context) {
-        SharedPreferences pref=values(context);
-        if (pref.getBoolean(INITIAL_SOURCE_SAVED,false)) return;
-        pref.edit().putBoolean(INITIAL_SOURCE_SAVED,true)
-            .putString(INITIAL_SOURCE_LABEL,"گوگل‌پلی")
-            .putString(INITIAL_SOURCE_PACKAGE,"com.android.vending")
-            .putString(INITIAL_SOURCE_KEY,UpdateSource.GOOGLE_PLAY.key)
-            .putString(UPDATE_SOURCE,UpdateSource.GOOGLE_PLAY.key).apply();
+        SharedPreferences sharedPreferencesValues = values(context);
+        if (sharedPreferencesValues.getBoolean(INITIAL_SOURCE_SAVED, false)) {
+            return;
+        }
+        InstallSourceDetector.Detection detectionDetect = InstallSourceDetector.detect(context);
+        sharedPreferencesValues.edit().putBoolean(INITIAL_SOURCE_SAVED, true).putString(INITIAL_SOURCE_LABEL, detectionDetect.label).putString(INITIAL_SOURCE_PACKAGE, detectionDetect.packageName).putString(INITIAL_SOURCE_KEY, detectionDetect.suggestedSource.key).putString(UPDATE_SOURCE, detectionDetect.suggestedSource.key).apply();
     }
 
     public static String initialInstallSourceLabel(Context context) {

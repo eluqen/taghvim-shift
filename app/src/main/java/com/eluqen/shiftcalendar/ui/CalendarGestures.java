@@ -28,7 +28,7 @@ public final class CalendarGestures {
     if(Math.abs(dx)>70*density&&Math.abs(dx)>Math.abs(dy)*1.35f){
      MotionEvent cancel=MotionEvent.obtain(e);cancel.setAction(MotionEvent.ACTION_CANCEL);
      grid.dispatchTouchEvent(cancel);cancel.recycle();
-     CalendarMotion.navigate(a,dx<0?1:-1);return true;
+     CalendarMotion.navigate(a,CalendarMonthDirection.fromDrag(dx));return true;
     }
    }
   }catch(Exception ex){android.util.Log.e("ELUQEN_CALENDAR","Swipe failed",ex);}

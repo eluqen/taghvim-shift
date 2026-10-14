@@ -132,7 +132,7 @@ public final class CardexActivity extends BaseActivity {
         nav.setPadding(Ui.dp(this, 6), Ui.dp(this, 3), Ui.dp(this, 6), Ui.dp(this, 3));
         nav.setBackground(Ui.roundedStroke(Ui.SURFACE_ALT, Ui.BORDER, 10, this));
 
-        Button next = Ui.tonalButton(this, "ماه بعد ›");
+        Button next = Ui.tonalButton(this, "ماه بعد");
         next.setTextSize(11.5f);
         next.setOnClickListener(v -> moveMonth(1));
 
@@ -156,7 +156,7 @@ public final class CardexActivity extends BaseActivity {
                     refresh();
                 }));
 
-        Button previous = Ui.tonalButton(this, "‹ ماه قبل");
+        Button previous = Ui.tonalButton(this, "ماه قبل");
         previous.setTextSize(11.5f);
         previous.setOnClickListener(v -> moveMonth(-1));
 
@@ -164,31 +164,32 @@ public final class CardexActivity extends BaseActivity {
         bulkLeave.setTextSize(10.5f);
         bulkLeave.setOnClickListener(v -> showBulkDailyLeave());
 
-        LinearLayout nextGroup = new LinearLayout(this);
-        nextGroup.setOrientation(LinearLayout.HORIZONTAL);
-        nextGroup.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        nextGroup.setGravity(Gravity.CENTER);
-        nextGroup.addView(next,
+        // RTL timeline: previous on the right, next on the left.
+        LinearLayout rightGroup = new LinearLayout(this);
+        rightGroup.setOrientation(LinearLayout.HORIZONTAL);
+        rightGroup.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        rightGroup.setGravity(Gravity.CENTER);
+        rightGroup.addView(previous,
                 new LinearLayout.LayoutParams(Ui.dp(this, 72), Ui.dp(this, 40)));
-        nextGroup.addView(todayButton,
+        rightGroup.addView(todayButton,
                 new LinearLayout.LayoutParams(Ui.dp(this, 58), Ui.dp(this, 40)));
 
-        LinearLayout previousGroup = new LinearLayout(this);
-        previousGroup.setOrientation(LinearLayout.HORIZONTAL);
-        previousGroup.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        previousGroup.setGravity(Gravity.CENTER);
-        previousGroup.addView(bulkLeave,
+        LinearLayout leftGroup = new LinearLayout(this);
+        leftGroup.setOrientation(LinearLayout.HORIZONTAL);
+        leftGroup.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        leftGroup.setGravity(Gravity.CENTER);
+        leftGroup.addView(bulkLeave,
                 new LinearLayout.LayoutParams(Ui.dp(this, 86), Ui.dp(this, 40)));
-        previousGroup.addView(previous,
+        leftGroup.addView(next,
                 new LinearLayout.LayoutParams(Ui.dp(this, 72), Ui.dp(this, 40)));
 
-        nav.addView(nextGroup,
+        nav.addView(rightGroup,
                 new LinearLayout.LayoutParams(Ui.dp(this, 130), Ui.dp(this, 40)));
         LinearLayout.LayoutParams monthLp =
                 new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1f);
         monthLp.setMargins(Ui.dp(this, 3), 0, Ui.dp(this, 3), 0);
         nav.addView(monthTitle, monthLp);
-        nav.addView(previousGroup,
+        nav.addView(leftGroup,
                 new LinearLayout.LayoutParams(Ui.dp(this, 158), Ui.dp(this, 40)));
         root.addView(nav, Ui.margins(this, -1, Ui.dp(this, 46), 6, 3, 6, 3));
 
@@ -681,15 +682,15 @@ public final class CardexActivity extends BaseActivity {
         box.setLayoutParams(params);
 
         if (state == null) {
-            box.addView(statusLine("بدون الگو", 0xffeef2f4, 0xff65727b));
-            box.setContentDescription("بدون الگو");
+            box.addView(statusLine("تعیین نشده", 0xffeef2f4, 0xff65727b));
+            box.setContentDescription("تعیین نشده");
             return box;
         }
 
         if (mode == DayWorkResolver.MODE_OVERTIME && state.hasOvertime) {
             if (state.baseProfile != null && state.baseProfile.working) {
                 TextView pattern = statusLine(
-                        "الگو: " + state.baseProfile.title,
+                        state.baseProfile.title,
                         0xffe3f2ff, 0xff24628c);
                 String otText = "اضافه‌کار: " + state.overtimeTitle()
                         + "  "
@@ -707,7 +708,7 @@ public final class CardexActivity extends BaseActivity {
                 }
             } else {
                 box.addView(statusLine(
-                        "الگو: " + safeTitle(state.baseProfile),
+                        safeTitle(state.baseProfile),
                         0xffe3f2ff, 0xff24628c));
                 box.addView(statusLine(
                         "اضافه‌کار: " + state.overtimeTitle()
@@ -719,7 +720,7 @@ public final class CardexActivity extends BaseActivity {
             }
         } else if (mode == DayWorkResolver.MODE_SWAP) {
             box.addView(statusLine(
-                    "الگو: " + safeTitle(state.baseProfile),
+                    safeTitle(state.baseProfile),
                     0xffe3f2ff, 0xff24628c));
             box.addView(statusLine(
                     state.swapApplied
@@ -728,7 +729,7 @@ public final class CardexActivity extends BaseActivity {
                     0xffeee7ff, 0xff6845a8));
         } else if (mode == DayWorkResolver.MODE_LEAVE) {
             box.addView(statusLine(
-                    "الگو: " + safeTitle(state.baseProfile),
+                    safeTitle(state.baseProfile),
                     0xffe3f2ff, 0xff24628c));
             boolean hourlyLeave = state.isHourlyAbsence();
             String leave = hourlyLeave
@@ -742,7 +743,7 @@ public final class CardexActivity extends BaseActivity {
                     : statusLine(leave, BG_LEAVE, FG_LEAVE));
         } else if (mode == DayWorkResolver.MODE_REST) {
             box.addView(statusLine(
-                    "الگو: " + safeTitle(state.baseProfile),
+                    safeTitle(state.baseProfile),
                     0xffe3f2ff, 0xff24628c));
             boolean hourlyRest = state.isHourlyAbsence();
             String rest = hourlyRest
@@ -756,7 +757,7 @@ public final class CardexActivity extends BaseActivity {
                     : statusLine(rest, BG_REST, FG_REST));
         } else {
             box.addView(statusLine(
-                    "الگو: " + safeTitle(state.effectiveProfile),
+                    safeTitle(state.effectiveProfile),
                     0xffe3f2ff, 0xff24628c));
         }
 
@@ -803,9 +804,9 @@ public final class CardexActivity extends BaseActivity {
     }
 
     private String statusDescription(DayWorkResolver.State state, int mode) {
-        if (state == null) return "بدون الگو";
+        if (state == null) return "تعیین نشده";
         if (mode == DayWorkResolver.MODE_OVERTIME && state.hasOvertime) {
-            String pattern = "الگو " + safeTitle(state.baseProfile);
+            String pattern = safeTitle(state.baseProfile);
             String ot = "اضافه‌کاری " + state.overtimeTitle();
             if (state.baseProfile != null && state.baseProfile.working) {
                 return overtimeBeforePattern(state)
@@ -815,11 +816,11 @@ public final class CardexActivity extends BaseActivity {
             return pattern + "، " + ot;
         }
         if (mode == DayWorkResolver.MODE_SWAP) {
-            return "الگو " + safeTitle(state.baseProfile)
+            return safeTitle(state.baseProfile)
                     + "، تعویض به " + safeTitle(state.effectiveProfile);
         }
         if (mode == DayWorkResolver.MODE_LEAVE) {
-            return "الگو " + safeTitle(state.baseProfile) + "، "
+            return safeTitle(state.baseProfile) + "، "
                     + state.absenceTitle()
                     + (state.isHourlyAbsence()
                     ? " " + ShiftPreferences.formatMinute(state.absenceStartMinute())
@@ -827,14 +828,14 @@ public final class CardexActivity extends BaseActivity {
                     : "");
         }
         if (mode == DayWorkResolver.MODE_REST) {
-            return "الگو " + safeTitle(state.baseProfile) + "، "
+            return safeTitle(state.baseProfile) + "، "
                     + state.absenceTitle()
                     + (state.isHourlyAbsence()
                     ? " " + ShiftPreferences.formatMinute(state.absenceStartMinute())
                     + " تا " + ShiftPreferences.formatMinute(state.absenceEndMinute())
                     : "");
         }
-        return "الگو " + safeTitle(state.effectiveProfile);
+        return safeTitle(state.effectiveProfile);
     }
 
     private boolean overtimeBeforePattern(DayWorkResolver.State state) {

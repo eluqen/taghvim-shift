@@ -39,14 +39,22 @@ public class TransportBoundaryTest {
         String start=url("three");for(int i=0;i<3;i++)replies.put(start+i,new Reply(302,0,start+(i+1),null,new byte[0]));response(start+3,1,new byte[]{9});assertArrayEquals(new byte[]{9},get(start+0,64));
     }
     @Test public void fourthRedirectRejected() throws Exception {
-        String start=url("four");for(int i=0;i<4;i++)replies.put(start+i,new Reply(302,0,start+(i+1),null,new byte[0]));response(start+4,1,new byte[]{9});TestRejections.rejects(() -> get(start+0,64));
+        String start=url("four");for(int i=0;i<4;i++)replies.put(start+i,new Reply(302,0,start+(i+1),null,new byte[0]));response(start+4,1,new byte[]{9});UpdateNegativeSecurityTest.rejects(() -> get(start+0,64));
     }
-    @Test public void httpRedirectRejected() throws Exception {String u=url("downgrade");replies.put(u,new Reply(302,0,"http://update.eluqen.com/insecure",null,new byte[0]));TestRejections.rejects(() -> get(u,64));}
-    @Test public void crossHostRedirectRejected() throws Exception {String u=url("cross");replies.put(u,new Reply(302,0,"https://evil.test/data",null,new byte[0]));TestRejections.rejects(() -> get(u,64));}
-    @Test public void missingRedirectLocationRejected() throws Exception {String u=url("missing");replies.put(u,new Reply(302,0,null,null,new byte[0]));TestRejections.rejects(() -> get(u,64));}
-    @Test public void oversizedManifestHeaderRejected() throws Exception {String u=url("big-manifest");response(u,65537,new byte[1]);TestRejections.rejects(() -> get(u,UpdateConfig.MAX_MANIFEST_BYTES));}
-    @Test public void oversizedManifestStreamRejected() throws Exception {String u=url("big-stream");response(u,-1,new byte[65537]);TestRejections.rejects(() -> get(u,UpdateConfig.MAX_MANIFEST_BYTES));}
-    @Test public void oversizedSignatureStreamRejected() throws Exception {String u=url("big-signature");response(u,-1,new byte[4097]);TestRejections.rejects(() -> get(u,UpdateConfig.MAX_SIGNATURE_BYTES));}
+    @Test public void httpRedirectRejected() throws Exception {String u=url("downgrade");replies.put(u,new Reply(302,0,"http://update.eluqen.com/insecure",null,new byte[0]));UpdateNegativeSecurityTest.rejects(() -> get(u,64));}
+    @Test public void crossHostRedirectRejected() throws Exception {String u=url("cross");replies.put(u,new Reply(302,0,"https://evil.test/data",null,new byte[0]));UpdateNegativeSecurityTest.rejects(() -> get(u,64));}
+    @Test public void missingRedirectLocationRejected() throws Exception {String u=url("missing");replies.put(u,new Reply(302,0,null,null,new byte[0]));UpdateNegativeSecurityTest.rejects(() -> get(u,64));}
+    @Test public void oversizedManifestHeaderRejected() throws Exception {String u=url("big-manifest");response(u,65537,new byte[1]);UpdateNegativeSecurityTest.rejects(() -> get(u,UpdateConfig.MAX_MANIFEST_BYTES));}
+    @Test public void oversizedManifestStreamRejected() throws Exception {String u=url("big-stream");response(u,-1,new byte[65537]);UpdateNegativeSecurityTest.rejects(() -> get(u,UpdateConfig.MAX_MANIFEST_BYTES));}
+    @Test public void oversizedSignatureStreamRejected() throws Exception {String u=url("big-signature");response(u,-1,new byte[4097]);UpdateNegativeSecurityTest.rejects(() -> get(u,UpdateConfig.MAX_SIGNATURE_BYTES));}
     @Test public void notPublished404IsTyped() throws Exception {String u=url("404");replies.put(u,new Reply(404,0,null,null,new byte[0]));try{get(u,64);fail();}catch(SecureUpdateTransport.HttpStatusException e){assertEquals(404,e.statusCode);}}
     @Test public void retryAfter429Preserved() throws Exception {String u=url("429");replies.put(u,new Reply(429,0,null,"30",new byte[0]));try{get(u,64);fail();}catch(SecureUpdateTransport.HttpStatusException e){assertEquals(429,e.statusCode);assertEquals(30,e.retryAfterSeconds);}}
+    @Test public void oversizedApkHeaderDeletesTemporaryFile() throws Exception {
+        String u="https://downloads.eluqen.com/oversized.apk";response(u,(int)UpdateConfig.MAX_APK_BYTES+1,new byte[1]);File f=File.createTempFile("apk-qa-",".apk");
+        try {UpdateNegativeSecurityTest.rejects(() -> SecureUpdateTransport.downloadToFile(u,f,UpdateConfig.MAX_APK_BYTES,"application/octet-stream",1000));assertFalse(f.exists());}finally{f.delete();}
+    }
+    @Test public void streamOverflowDeletesTemporaryFile() throws Exception {
+        String u="https://downloads.eluqen.com/overflow.apk";response(u,-1,new byte[1025]);File f=File.createTempFile("apk-qa-",".apk");
+        try {UpdateNegativeSecurityTest.rejects(() -> SecureUpdateTransport.downloadToFile(u,f,1024,"application/octet-stream",1000));assertFalse(f.exists());}finally{f.delete();}
+    }
 }

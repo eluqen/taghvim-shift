@@ -130,7 +130,8 @@ public final class FourShiftActivity extends BaseActivity {
 
         // Previous/next keep fixed widths. Month/year owns the exact center area;
         // Today overlays that area and therefore can appear/disappear without moving it.
-        nav.addView(next,
+        // RTL time navigation: previous month sits on the physical right.
+        nav.addView(previous,
                 new LinearLayout.LayoutParams(
                         Ui.dp(this, 72), Ui.dp(this, 42)));
 
@@ -156,7 +157,7 @@ public final class FourShiftActivity extends BaseActivity {
         todayButton.setEnabled(false);
         navCenter.addView(todayButton, todayNavLp);
 
-        nav.addView(previous,
+        nav.addView(next,
                 new LinearLayout.LayoutParams(
                         Ui.dp(this, 72), Ui.dp(this, 42)));
         root.addView(nav, Ui.margins(

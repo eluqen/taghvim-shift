@@ -34,6 +34,7 @@ public final class BackDock {
    "AboutActivity"
  };
  static final String EXTRA_ROOT_ENTRY="eluqen_root_tab_entry";
+ static final String EXTRA_FEATURES_CHILD="eluqen_features_child";
  private BackDock(){}
  static void applyTheme(AppTheme.Palette p){
   NAVY=p.primary;TEAL=p.secondary;WHITE=p.card;MUTED=p.muted;
@@ -97,11 +98,30 @@ public final class BackDock {
   activity.finish();
   activity.overridePendingTransition(0,0);
  }
+ private static boolean isFeaturesChild(Activity activity){
+  return activeTab(activity)<0
+      && activity.getIntent()!=null
+      && activity.getIntent().getBooleanExtra(EXTRA_FEATURES_CHILD,false);
+ }
+ public static void goToFeaturesHome(Activity activity){
+  Intent features=new Intent(activity,FeatureHubActivity.class);
+  features.putExtra(EXTRA_ROOT_ENTRY,true);
+  features.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION
+    |Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
+  activity.startActivity(features);
+  activity.finish();
+  activity.overridePendingTransition(0,0);
+ }
  public static boolean handleBack(Activity activity){
+  // Nested editor state wins; root Back semantics are intentionally unchanged.
   if(activity instanceof LocalBackHandler
       && ((LocalBackHandler)activity).onDockBack())return true;
   if(isSettingsChild(activity)){
    goToSettingsHome(activity);
+   return true;
+  }
+  if(isFeaturesChild(activity)){
+   goToFeaturesHome(activity);
    return true;
   }
   goToStart(activity);

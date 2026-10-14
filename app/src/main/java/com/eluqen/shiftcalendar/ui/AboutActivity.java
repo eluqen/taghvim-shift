@@ -45,7 +45,18 @@ public final class AboutActivity extends Activity {
   AppUpdateManager.OpenResult r=AppUpdateManager.openReview(this);
   if(!r.opened)Toast.makeText(this,r.message,Toast.LENGTH_LONG).show();
  }
- private void requestReview(){ openReviewNow(); }
+ private void requestReview(){
+  if(AppUpdateManager.selectedSource(this)==UpdateSource.MYKET){
+   new AlertDialog.Builder(this)
+    .setTitle("ثبت نظر در مایکت")
+    .setMessage("مایلید صفحه ثبت نظر و امتیاز تقویم شیفت در مایکت باز شود؟")
+    .setPositiveButton("ادامه",(dialog,which)->openReviewNow())
+    .setNegativeButton("انصراف",null)
+    .show();
+   return;
+  }
+  openReviewNow();
+ }
  @Override protected void onCreate(Bundle state){
   super.onCreate(state);AppTheme.apply(this);BackDock.registerSystemBack(this);
   LinearLayout root=new LinearLayout(this);root.setOrientation(android.widget.LinearLayout.VERTICAL);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setBackgroundColor(Ui.SURFACE);
@@ -71,7 +82,7 @@ public final class AboutActivity extends Activity {
   TextView caption=label("وب‌سایت، گیت‌هاب و ایمیل پشتیبانی اپلیکیشن",13,Ui.MUTED,false);
   caption.setPadding(0,dp(6),0,dp(7));contact.addView(caption);
   link(contact,"وب‌سایت رسمی","eluqen.com","https://eluqen.com/",false);
-  link(contact,"سیاست حفظ حریم خصوصی","سیاست داده‌های برنامه","https://eluqen.com/apps/taghvim-shift/privacy-policy/",false);
+  link(contact,"سیاست حفظ حریم خصوصی","اطلاعات حریم خصوصی تقویم شیفت","https://eluqen.com/apps/taghvim-shift/privacy-policy/",false);
   link(contact,"GitHub پروژه","github.com/eluqen/taghvim-shift",GITHUB_URL,false);
   link(contact,"ایمیل پشتیبانی","dev@eluqen.com","mailto:dev@eluqen.com?subject=ELUQEN%20Taghvim%20Shift%20Support",true);
   if(AppUpdateManager.supportsReview(this)||AppUpdateManager.supportsDeveloperPage(this)){

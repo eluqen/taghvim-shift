@@ -16,6 +16,7 @@ import com.eluqen.shiftcalendar.core.PersianDate;
 import com.eluqen.shiftcalendar.core.PersianDigits;
 import com.eluqen.shiftcalendar.data.Prefs;
 import com.eluqen.shiftcalendar.events.EventRepository;
+import com.eluqen.shiftcalendar.update.AppUpdateInstaller;
 import com.eluqen.shiftcalendar.update.AppUpdateManager;
 import com.eluqen.shiftcalendar.update.DataUpdateJobService;
 import com.eluqen.shiftcalendar.update.DataUpdateManager;
@@ -65,7 +66,19 @@ public final class UpdateCenterActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         refresh();
-
+        if (!storeChoicePromptShown
+                && AppUpdateManager.isMarketPolicyRestricted(this)
+                && AppUpdateManager.selectedSource(this) == UpdateSource.ASK) {
+            storeChoicePromptShown = true;
+            chooseSource();
+        }
+        if (waitingForInstallPermission && canInstallUnknownApps()) {
+            File pending = verifiedApkFile();
+            waitingForInstallPermission = false;
+            if (pending.isFile()) {
+                openInstaller(pending);
+            }
+        }
     }
 
     private void buildUi() {
@@ -206,8 +219,14 @@ public final class UpdateCenterActivity extends BaseActivity {
                         + formatTimestamp(Prefs.lastAppCheck(this))
                         + pending));
 
-        sourceButton.setVisibility(View.GONE);
-        autoApp.setVisibility(View.GONE);
+        boolean unknownMarket = AppUpdateManager.isMarketPolicyRestricted(this)
+                && source == UpdateSource.ASK;
+        sourceButton.setVisibility(unknownMarket ? View.VISIBLE : View.GONE);
+        sourceButton.setText("انتخاب فروشگاه");
+
+        boolean direct = source == UpdateSource.DIRECT;
+        autoApp.setVisibility(direct ? View.VISIBLE : View.GONE);
+        autoApp.setEnabled(direct);
         appUpdatePolicy.setVisibility(View.GONE);
 
         EventRepository.PackInfo info = EventRepository.get(this).info();
@@ -225,7 +244,57 @@ public final class UpdateCenterActivity extends BaseActivity {
                         + networkLabel(Prefs.updateNetwork(this)));
     }
 
-    private void chooseSource() {}
+    private void chooseSource() {
+        List<UpdateSource> sources = AppUpdateManager.selectableSources(this);
+        if (sources.size() == 1) {
+            UpdateSource only = sources.get(0);
+            new AlertDialog.Builder(this)
+                    .setTitle(only.label)
+                    .setMessage(
+                            "مسیر به‌روزرسانی خود برنامه در این نسخه به «"
+                                    + only.label
+                                    + "» محدود است. بانک مناسبت‌ها همچنان مستقل به‌روزرسانی می‌شود.")
+                    .setPositiveButton("متوجه شدم", null)
+                    .show();
+            return;
+        }
+
+        String[] labels = new String[sources.size()];
+        UpdateSource selected = AppUpdateManager.selectedSource(this);
+        int checked = -1;
+        for (int i = 0; i < sources.size(); i++) {
+            labels[i] = sources.get(i).label;
+            if (sources.get(i) == selected) checked = i;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(selected == UpdateSource.ASK
+                        ? "منبع نصب مشخص نیست؛ فروشگاه موردنظر را انتخاب کنید"
+                        : "منبع به‌روزرسانی برنامه")
+                .setSingleChoiceItems(FancyDialogs.single(this, labels), checked, null)
+                .setPositiveButton("ذخیره", (dialog, which) -> {
+                    int position = ((AlertDialog) dialog)
+                            .getListView().getCheckedItemPosition();
+                    if (position < 0) {
+                        android.widget.Toast.makeText(this, "ابتدا بازار، مایکت یا گلکسی استور را انتخاب کنید", android.widget.Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    UpdateSource source = sources.get(position);
+                    Prefs.setUpdateSource(this, source);
+                    refresh();
+                    if (source == UpdateSource.GOOGLE_PLAY
+                            && !"گوگل‌پلی".equals(Prefs.initialInstallSourceLabel(this))) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("نکته گوگل‌پلی")
+                                .setMessage(
+                                        "گوگل‌پلی زمانی می‌تواند این نصب را به‌روزرسانی کند که برنامه با همین شناسه و امضا در گوگل‌پلی منتشر شده و دست‌کم یک‌بار به حساب Google کاربر اضافه شده باشد.")
+                                .setPositiveButton("متوجه شدم", null)
+                                .show();
+                    }
+                })
+                .setNegativeButton("انصراف", null)
+                .show();
+    }
 
     private void chooseNetwork() {
         String[] labels = {
@@ -260,19 +329,109 @@ public final class UpdateCenterActivity extends BaseActivity {
     }
 
     private void checkAppUpdate() {
-        AppUpdateManager.OpenResult result = AppUpdateManager.openStore(this, UpdateSource.GOOGLE_PLAY);
-        if (!result.opened) Ui.toast(this, result.message);
+        UpdateSource source = AppUpdateManager.selectedSource(this);
+        if (source == UpdateSource.ASK) {
+            chooseSource();
+            return;
+        }
+        if (source != UpdateSource.DIRECT) {
+            AppUpdateManager.OpenResult result =
+                    AppUpdateManager.openStore(this, source);
+            if (!result.opened) Ui.toast(this, result.message);
+            return;
+        }
+
+        appUpdateButton.setEnabled(false);
+        appUpdateButton.setText("در حال بررسی…");
+        AppUpdateManager.checkDirect(this, result -> runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            appUpdateButton.setEnabled(true);
+            appUpdateButton.setText("بررسی به‌روزرسانی برنامه");
+            showAppResult(result);
+            refresh();
+        }));
     }
 
+    private void showAppResult(AppUpdateManager.Result result) {
+        if (result.status != AppUpdateManager.Status.UPDATE_AVAILABLE) {
+            new AlertDialog.Builder(this)
+                    .setTitle("به‌روزرسانی برنامه")
+                    .setMessage(result.message)
+                    .setPositiveButton("بستن", null)
+                    .show();
+            return;
+        }
 
+        StringBuilder message = new StringBuilder();
+        message.append("نسخه فعلی: ").append(versionName());
+        message.append("\nنسخه جدید: ").append(result.versionName);
+        if (!result.changelog.trim().isEmpty()) {
+            message.append("\n\nتغییرات:\n").append(result.changelog.trim());
+        }
 
+        new AlertDialog.Builder(this)
+                .setTitle("نسخه جدید آماده است")
+                .setMessage(PersianDigits.of(message.toString()))
+                .setPositiveButton(
+                        "دانلود و نصب",
+                        (dialog, which) -> downloadAndInstall(result))
+                .setNegativeButton("بعداً", null)
+                .show();
+    }
 
+    private void downloadAndInstall(AppUpdateManager.Result update) {
+        appUpdateButton.setEnabled(false);
+        appUpdateButton.setText("در حال دریافت…");
+        Ui.toast(this, "در حال دریافت و اعتبارسنجی APK…");
 
+        AppUpdateManager.downloadVerifiedApk(this, update, result ->
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    appUpdateButton.setEnabled(true);
+                    appUpdateButton.setText("بررسی به‌روزرسانی برنامه");
+                    if (!result.success || result.file == null) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("دانلود نسخه جدید")
+                                .setMessage(result.message)
+                                .setPositiveButton("بستن", null)
+                                .show();
+                        return;
+                    }
+                    openInstaller(result.file);
+                }));
+    }
 
+    private void openInstaller(File file) {
+        try {
+            AppUpdateInstaller.Result result =
+                    AppUpdateInstaller.install(this, file);
+            waitingForInstallPermission =
+                    result == AppUpdateInstaller.Result.PERMISSION_REQUIRED;
+            if (waitingForInstallPermission) {
+                Ui.toast(
+                        this,
+                        "برای نصب به‌روزرسانی، اجازه نصب از این منبع را فعال کنید.");
+            }
+        } catch (Exception e) {
+            waitingForInstallPermission = false;
+            new AlertDialog.Builder(this)
+                    .setTitle("نصب نسخه جدید")
+                    .setMessage("باز کردن نصب‌کننده Android انجام نشد.")
+                    .setPositiveButton("بستن", null)
+                    .show();
+        }
+    }
 
+    private boolean canInstallUnknownApps() {
+        return Build.VERSION.SDK_INT < 26
+                || getPackageManager().canRequestPackageInstalls();
+    }
 
-
-
+    private File verifiedApkFile() {
+        return new File(
+                new File(getCacheDir(), "updates"),
+                "ELUQEN-Taghvim-Shift-update.apk");
+    }
 
     private void previewDataUpdate() {
         dataUpdateButton.setEnabled(false);

@@ -35,7 +35,7 @@ public class UpdateSecurityTest {
         byte[] tampered = "{\"versionCode\":3}".getBytes(StandardCharsets.UTF_8);
         assertFalse(SecureUpdateTransport.verifySignature(
                 pair.getPublic(), tampered, signature));
-        TestRejections.rejects(() -> SecureUpdateTransport.verifyRawManifestWithKey(tampered,envelopeBytes,pair.getPublic()));
+        UpdateNegativeSecurityTest.rejects(() -> SecureUpdateTransport.verifyRawManifestWithKey(tampered,envelopeBytes,pair.getPublic()));
     }
 
     @Test

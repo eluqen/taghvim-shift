@@ -45,7 +45,7 @@ public final class CalendarMotion {
    location.leftMargin=gridPos[0]-rootPos[0];location.topMargin=gridPos[1]-rootPos[1];
    ImageView leaving=image(a,previous,w,h),entering=image(a,next,w,h);
    mask.addView(leaving);mask.addView(entering);
-   int direction=delta>0?-1:1;
+   int direction=CalendarMonthDirection.animationDirectionForMonthDelta(delta);
    entering.setTranslationX(-direction*w);
    calendar.setAlpha(0f);
    root.addView(mask,location);running.put(a,mask);

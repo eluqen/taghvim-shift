@@ -63,7 +63,9 @@ public final class MainActivity extends BaseActivity {
         this.selected = persianDate;
         this.displayedMonth = persianDate.firstOfMonth();
         renderMonth();
-        renderSelected();
+        if (!CalendarDrag.isPreparing(this)) {
+            renderSelected();
+        }
     }
 
     @Override
@@ -120,7 +122,7 @@ public final class MainActivity extends BaseActivity {
         }
         Prefs.ensureInitialInstallSource(this);
         DataUpdateJobService.syncSchedule(this);
-        
+        AppUpdateManager.maybeCheckDirectInBackground(this);
         if (Prefs.reminderEnabled(this)) {
             new Thread(MainActivity.createRunCallback0(this), "eluqen-shift-calendar-main-reminder").start();
         }
@@ -143,6 +145,12 @@ public final class MainActivity extends BaseActivity {
         this.activePlan = this.database.activePlan();
         renderMonth();
         renderSelected();
+    }
+
+    @Override
+    protected void onPause() {
+        CalendarDrag.onPause(this);
+        super.onPause();
     }
 
     @Override
@@ -191,11 +199,12 @@ public final class MainActivity extends BaseActivity {
         textViewTitle.setGravity(17);
         this.monthTitle.setOnClickListener(MainActivity.createOnClickCallback7(this));
 
-        linearLayout4.addView(button5,
+        // Persian month timeline: PREVIOUS on the right, NEXT on the left.
+        linearLayout4.addView(button6,
                 new LinearLayout.LayoutParams(Ui.dp(this, 92.0f), Ui.dp(this, 46.0f)));
         linearLayout4.addView(this.monthTitle,
                 new LinearLayout.LayoutParams(0, Ui.dp(this, 48.0f), 1.0f));
-        linearLayout4.addView(button6,
+        linearLayout4.addView(button5,
                 new LinearLayout.LayoutParams(Ui.dp(this, 92.0f), Ui.dp(this, 46.0f)));
         linearLayout3.addView(linearLayout4);
         GridLayout gridLayout = new GridLayout(this);
@@ -346,7 +355,10 @@ public final class MainActivity extends BaseActivity {
                     persianDateFromJdn.equals(this.selected),
                     persianDateFromJdn.equals(persianDate));
         }
-        HolidayCalendar.month(this, this.displayedMonth, this.calendarGrid);
+        if (!CalendarDrag.isPreparing(this)) {
+            HolidayCalendar.month(this, this.displayedMonth, this.calendarGrid);
+            CalendarDrag.onMonthRendered(this);
+        }
     }
 
     private void renderSelected() {

@@ -1,7 +1,12 @@
 package com.eluqen.shiftcalendar.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Rect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -11,6 +16,19 @@ import android.view.View;
 public final class WorkStatusGlyph extends View {
     public static final int NOTE = 1, SWAP = 2, LEAVE = 3, REST = 4, OVERTIME = 5;
     public static final int SHIFT_DAY = 6, SHIFT_EVENING = 7, SHIFT_NIGHT = 8;
+
+    // Approved owner-provided transparent 3D illustrations are packed into a
+    // single density-independent 2x2 atlas: leave/swap on top, overtime/rest below.
+    // Shared decode prevents dozens of Cardex row views allocating bitmaps.
+    private static volatile Bitmap approvedStatusAtlas;
+    private static final ColorMatrixColorFilter DESATURATED_ATLAS = desaturatedAtlas();
+
+    /** Unregistered days should look subdued, not like recorded actions. */
+    private static ColorMatrixColorFilter desaturatedAtlas() {
+        ColorMatrix grayscale = new ColorMatrix();
+        grayscale.setSaturation(0f);
+        return new ColorMatrixColorFilter(grayscale);
+    }
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final int type;
@@ -48,6 +66,7 @@ public final class WorkStatusGlyph extends View {
         super.onDraw(canvas);
         float s = Math.min(getWidth(), getHeight());
         float cx = getWidth() / 2f, cy = getHeight() / 2f;
+        if (drawApprovedStatusIcon(canvas)) return;
         if (type == NOTE) note(canvas, cx, cy, s);
         else if (type == SWAP) swap(canvas, cx, cy, s);
         else if (type == LEAVE) leave(canvas, cx, cy, s);
@@ -56,6 +75,51 @@ public final class WorkStatusGlyph extends View {
         else if (type == SHIFT_DAY) shiftDay(canvas, cx, cy, s);
         else if (type == SHIFT_EVENING) shiftEvening(canvas, cx, cy, s);
         else shiftNight(canvas, cx, cy, s);
+    }
+
+    private Bitmap statusAtlas() {
+        Bitmap atlas = approvedStatusAtlas;
+        if (atlas != null && !atlas.isRecycled()) return atlas;
+        synchronized (WorkStatusGlyph.class) {
+            atlas = approvedStatusAtlas;
+            if (atlas == null || atlas.isRecycled()) {
+                BitmapFactory.Options opts = new BitmapFactory.Options();
+                opts.inScaled = false; // exact transparent tile pixels at every DPI
+                atlas = BitmapFactory.decodeResource(
+                        getResources(), com.eluqen.shiftcalendar.R.drawable.eluqen_status_atlas, opts);
+                approvedStatusAtlas = atlas;
+            }
+        }
+        return atlas;
+    }
+
+    private boolean drawApprovedStatusIcon(Canvas canvas) {
+        final int tileX, tileY;
+        switch (type) {
+            case LEAVE: tileX = 0; tileY = 0; break;
+            case SWAP: tileX = 1; tileY = 0; break;
+            case OVERTIME: tileX = 0; tileY = 1; break;
+            case REST: tileX = 1; tileY = 1; break;
+            default: return false;
+        }
+        Bitmap atlas = statusAtlas();
+        if (atlas == null) return false; // preserve original vector fallback
+        int tw = atlas.getWidth() / 2;
+        int th = atlas.getHeight() / 2;
+        if (tw <= 0 || th <= 0) return false;
+        Rect source = new Rect(tileX * tw, tileY * th, (tileX + 1) * tw, (tileY + 1) * th);
+        float edge = Math.min(getWidth(), getHeight()) * .015f;
+        RectF target = new RectF(edge, edge, getWidth() - edge, getHeight() - edge);
+        p.setStyle(Paint.Style.FILL);
+        p.setColor(0xffffffff);
+        p.setAlpha(StatusGlyphTone.opacity(active));
+        p.setColorFilter(active ? null : DESATURATED_ATLAS);
+        p.setFilterBitmap(true);
+        canvas.drawBitmap(atlas, source, target, p);
+        // Reset paint state so only the approved bitmap receives this tint.
+        p.setColorFilter(null);
+        p.setAlpha(255);
+        return true;
     }
 
     private void note(Canvas canvas, float cx, float cy, float s) {
@@ -117,27 +181,30 @@ public final class WorkStatusGlyph extends View {
     }
 
     private void leave(Canvas canvas, float cx, float cy, float s) {
-        // A reclining vacationer shaded by a beach umbrella.
-        Path shade = new Path();
-        shade.moveTo(cx-s*.38f, cy-s*.08f);
-        shade.quadTo(cx-s*.16f, cy-s*.42f, cx+s*.30f, cy-s*.13f);
-        shade.quadTo(cx+s*.07f, cy-s*.16f, cx-s*.03f, cy-s*.10f);
-        shade.quadTo(cx-s*.21f, cy-s*.17f, cx-s*.38f, cy-s*.08f);
-        shade.close();
-        solid(fill(0xffff8a65)); canvas.drawPath(shade, p);
-        stroke(s*.043f, c(0xffb94f34)); canvas.drawPath(shade, p);
-        stroke(s*.044f, c(0xff76634e));
-        canvas.drawLine(cx-s*.07f, cy-s*.18f, cx+s*.13f, cy+s*.29f, p);
-        solid(c(0xffffc44e)); canvas.drawCircle(cx+s*.32f, cy-s*.29f, s*.067f, p);
-        // Head, relaxed torso and stretched-out legs on the sand.
-        solid(c(0xff3386ae)); canvas.drawCircle(cx-s*.20f, cy+s*.035f, s*.072f, p);
-        stroke(s*.071f, c(0xff3386ae));
-        canvas.drawLine(cx-s*.15f, cy+s*.09f, cx+s*.025f, cy+s*.20f, p);
-        canvas.drawLine(cx+s*.025f, cy+s*.20f, cx+s*.23f, cy+s*.20f, p);
-        canvas.drawLine(cx+s*.025f, cy+s*.20f, cx+s*.19f, cy+s*.29f, p);
-        canvas.drawLine(cx-s*.11f, cy+s*.12f, cx-s*.24f, cy+s*.24f, p);
-        stroke(s*.049f, c(0xffbf914f));
-        canvas.drawLine(cx-s*.36f, cy+s*.32f, cx+s*.36f, cy+s*.32f, p);
+        // A clean, upright beach umbrella, readable even in compact work-grid cells.
+        // The vertical shaft is deliberately clear of other shapes.
+        Path canopy = new Path();
+        canopy.moveTo(cx - s*.34f, cy - s*.07f);
+        canopy.quadTo(cx - s*.29f, cy - s*.38f, cx, cy - s*.38f);
+        canopy.quadTo(cx + s*.29f, cy - s*.38f, cx + s*.34f, cy - s*.07f);
+        canopy.quadTo(cx + s*.23f, cy - s*.16f, cx + s*.12f, cy - s*.07f);
+        canopy.quadTo(cx + s*.06f, cy - s*.16f, cx, cy - s*.07f);
+        canopy.quadTo(cx - s*.07f, cy - s*.16f, cx - s*.13f, cy - s*.07f);
+        canopy.quadTo(cx - s*.24f, cy - s*.16f, cx - s*.34f, cy - s*.07f);
+        canopy.close();
+        solid(fill(0xffff8a65)); canvas.drawPath(canopy, p);
+        stroke(s*.047f, c(0xffba5940)); canvas.drawPath(canopy, p);
+
+        stroke(s*.06f, c(0xff76634e));
+        canvas.drawLine(cx, cy - s*.07f, cx, cy + s*.29f, p);
+        stroke(s*.04f, c(0xffba5940));
+        canvas.drawLine(cx, cy - s*.36f, cx, cy - s*.08f, p);
+
+        solid(c(0xffffc44e));
+        canvas.drawCircle(cx + s*.35f, cy - s*.29f, s*.058f, p);
+        stroke(s*.051f, c(0xffbf914f));
+        canvas.drawLine(cx - s*.38f, cy + s*.34f,
+                cx + s*.38f, cy + s*.34f, p);
     }
 
     private void rest(Canvas canvas, float cx, float cy, float s) {

@@ -9,11 +9,15 @@ import android.widget.ScrollView;
 public final class HubSections {
  private HubSections(){}
  private static void open(Activity a,String name){
-  a.startActivity(new Intent().setClassName(a,"com.eluqen.shiftcalendar.ui."+name));
+  Intent child=new Intent().setClassName(a,"com.eluqen.shiftcalendar.ui."+name);
+  child.putExtra(BackDock.EXTRA_FEATURES_CHILD,true);
+  a.startActivity(child);
  }
  private static void planner(Activity a,String mode){
   Intent i=new Intent().setClassName(a,"com.eluqen.shiftcalendar.ui.PlannerActivity");
-  i.putExtra("mode",mode);a.startActivity(i);
+  i.putExtra("mode",mode);
+  i.putExtra(BackDock.EXTRA_FEATURES_CHILD,true);
+  a.startActivity(i);
  }
  public static void hub(Activity a,LinearLayout root){
   if(root.getChildCount()>0 && !(root.getChildAt(0) instanceof ScrollView))root.removeViewAt(0);
