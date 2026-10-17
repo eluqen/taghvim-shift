@@ -13,14 +13,28 @@
         <activity android:exported="false" android:name=".ui.FeatureHubActivity"/>
         <activity android:exported="false" android:name=".ui.RootPreviewWarmupActivity" android:theme="@style/PreviewWarmupTheme"/>
         <activity android:exported="false" android:name=".ui.GeneralSettingsActivity"/>
+        <activity android:exported="false" android:name=".ui.PersonalEventsActivity"/>
         <activity android:exported="false" android:name=".ui.ThemeSettingsActivity"/>
         <activity android:exported="false" android:name=".ui.PlannerActivity"/>
+        <activity android:exported="false" android:name=".ui.ReminderEditorActivity" android:windowSoftInputMode="adjustResize"/>
         <activity android:exported="false" android:name=".ui.TodoListActivity"/>
         <activity android:exported="false" android:name=".ui.NotebookActivity"/>
         <activity android:exported="false" android:name=".ui.AboutActivity"/>
         <activity android:exported="false" android:name=".ui.UpdateCenterActivity"/>
         <activity android:exported="false" android:name=".ui.FourShiftActivity"/>
         <activity android:exported="false" android:name=".ui.ColleaguesActivity"/>
+        <activity android:exported="true" android:name=".ui.ColleagueVCardShareActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/x-vcard"/>
+                <data android:mimeType="text/vcard"/>
+                <data android:mimeType="text/directory"/>
+                <data android:mimeType="application/vcard"/>
+                <data android:mimeType="application/x-vcard"/>
+            </intent-filter>
+        </activity>
         <activity android:exported="false" android:name=".ui.SettingsActivity"/>
         <activity android:exported="false" android:name=".ui.ToolsActivity"/>
         <activity android:exported="false" android:name=".ui.WorkNoteActivity"/>

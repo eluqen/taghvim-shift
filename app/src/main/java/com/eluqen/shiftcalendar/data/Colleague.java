@@ -10,4 +10,6 @@ public final class Colleague {
     public String mobile2 = "";
     public String phone = "";
     public String info = "";
+    /** Additional labeled numbers; JSON array, backward-compatible with legacy fields. */
+    public String extraPhonesJson = "[]";
 }

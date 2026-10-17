@@ -31,9 +31,11 @@ public final class ShiftAudio {
     }
 
     public static void setGlobalChoice(Context context, String choice) {
-        prefs(context).edit()
+        if (!prefs(context).edit()
                 .putString(GLOBAL, normalize(choice))
-                .apply();
+                .commit()) {
+            throw new IllegalStateException("Could not save global reminder sound");
+        }
     }
 
     public static boolean hasTypeOverride(Context context, String code) {
@@ -53,9 +55,11 @@ public final class ShiftAudio {
 
     public static void setTypeChoice(
             Context context, String code, String choice) {
-        prefs(context).edit()
+        if (!prefs(context).edit()
                 .putString(TYPE_PREFIX + code, normalize(choice))
-                .apply();
+                .commit()) {
+            throw new IllegalStateException("Could not save shift reminder sound");
+        }
     }
 
     public static void clearTypeChoice(Context context, String code) {

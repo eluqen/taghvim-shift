@@ -59,7 +59,6 @@ public final class CardexActivity extends BaseActivity {
     private LinearLayout monthSummary;
     private LinearLayout rows;
     private ScrollView scroll;
-    private LinearLayout monthTotals;
     private LinearLayout monthStatsPanel;
     private Button todayButton;
     private View todayRowView;
@@ -196,26 +195,15 @@ public final class CardexActivity extends BaseActivity {
         monthStatsPanel = new LinearLayout(this);
         monthStatsPanel.setOrientation(LinearLayout.VERTICAL);
         monthStatsPanel.setVisibility(View.VISIBLE);
-        monthStatsPanel.setPadding(Ui.dp(this, 6), Ui.dp(this, 8), Ui.dp(this, 6), Ui.dp(this, 8));
-        monthStatsPanel.setBackground(Ui.roundedStroke(Ui.SURFACE_ALT, Ui.BORDER, 12, this));
-
-        TextView monthStatsTitle = Ui.title(this, "خلاصه ماه", 14f);
-        monthStatsTitle.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        monthStatsPanel.addView(monthStatsTitle,
-                Ui.margins(this, -1, Ui.dp(this, 28), 4, 0, 4, 4));
+        monthStatsPanel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        monthStatsPanel.setPadding(Ui.dp(this, 7), Ui.dp(this, 7),
+                Ui.dp(this, 7), Ui.dp(this, 7));
+        monthStatsPanel.setBackground(Ui.roundedStroke(Ui.CARD, Ui.BORDER, 16, this));
 
         monthSummary = new LinearLayout(this);
-        monthSummary.setOrientation(LinearLayout.HORIZONTAL);
-        monthSummary.setGravity(Gravity.CENTER);
+        monthSummary.setOrientation(LinearLayout.VERTICAL);
         monthSummary.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        monthStatsPanel.addView(monthSummary, new LinearLayout.LayoutParams(-1, Ui.dp(this, 40)));
-
-        monthTotals = new LinearLayout(this);
-        monthTotals.setOrientation(LinearLayout.HORIZONTAL);
-        monthTotals.setGravity(Gravity.CENTER);
-        monthTotals.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        monthTotals.setPadding(Ui.dp(this, 2), Ui.dp(this, 2), Ui.dp(this, 2), Ui.dp(this, 2));
-        monthStatsPanel.addView(monthTotals, new LinearLayout.LayoutParams(-1, Ui.dp(this, 52)));
+        monthStatsPanel.addView(monthSummary, new LinearLayout.LayoutParams(-1, -2));
 
         // Sticky/fixed header: only the rows below this point scroll.
         LinearLayout header = new LinearLayout(this);
@@ -330,8 +318,8 @@ public final class CardexActivity extends BaseActivity {
         monthTitle.setText(PersianDigits.of(selected.monthName() + " " + selected.year));
 
         int notes = 0, swaps = 0, leaves = 0, rests = 0, overtime = 0;
-        int fridayWorkMinutes = 0;
-        int holidayWorkMinutes = 0;
+        int applicableFridays = 0;
+        int applicableHolidays = 0;
         PersianDate first = selected.firstOfMonth();
         PersianDate today = PersianDate.todayTehran();
         int days = JalaliCalendar.daysInMonth(selected.year, selected.month);
@@ -373,20 +361,18 @@ public final class CardexActivity extends BaseActivity {
                 pickedRow = row;
             }
 
-            if (state != null && (friday || official)) {
-                int workedMinutes = PremiumWorkPolicy.workedMinutes(state);
-                // Friday is always Friday-work, even when it is also an official holiday.
-                // Full-day leave/rest therefore contributes zero; hourly absence contributes
-                // only the remaining actual presence. Non-Friday holidays use the same rule.
-                if (friday) fridayWorkMinutes += workedMinutes;
-                else if (official) holidayWorkMinutes += workedMinutes;
+            // Count the whole selected month, including future dates.
+            // Only normally scheduled workdays that were NOT marked as leave count.
+            // Friday takes precedence if a date is also an official holiday.
+            if (PremiumWorkPolicy.scheduledPremiumDayEligible(state)) {
+                if (friday) applicableFridays++;
+                else if (official) applicableHolidays++;
             }
         }
 
-        renderMonthSummary(notes, swaps, leaves, rests, overtime);
-
         CardexStats stats = CardexStats.calculate(this, monthRecords, false);
-        renderTotals(stats, fridayWorkMinutes, holidayWorkMinutes);
+        renderWorkStats(notes, swaps, leaves, rests, overtime,
+                stats, applicableFridays, applicableHolidays);
 
         if (monthStatsPanel.getParent() instanceof android.view.ViewGroup) {
             ((android.view.ViewGroup) monthStatsPanel.getParent()).removeView(monthStatsPanel);
@@ -439,75 +425,108 @@ public final class CardexActivity extends BaseActivity {
         return false;
     }
 
-    private void renderMonthSummary(
-            int notes, int swaps, int leaves, int rests, int overtime) {
+    /**
+     * Six statistics only, two compact RTL rows with three equal-width cells.
+     * First row: overtime, leave, rest, each HH:MM with no recorded-day count.
+     * Second row: Friday, holiday, swap, numbers ONLY with no unit suffix.
+     * Data and existing calculations remain untouched.
+     */
+    private void renderWorkStats(int notes, int swaps, int leaves, int rests,
+            int overtime, CardexStats stats,
+            int applicableFridays, int applicableHolidays) {
         if (monthSummary == null) return;
         monthSummary.removeAllViews();
-        monthSummary.addView(summaryCell("یادداشت", notes, BG_NOTE, FG_NOTE));
-        monthSummary.addView(summaryCell("تعویض", swaps, BG_SWAP, FG_SWAP));
-        monthSummary.addView(summaryCell("مرخصی", leaves, BG_LEAVE, FG_LEAVE));
-        monthSummary.addView(summaryCell("استراحت", rests, BG_REST, FG_REST));
-        monthSummary.addView(summaryCell("اضافه‌کار", overtime, BG_OT, FG_OT));
+
+        monthSummary.addView(statsTripleRow(
+                statLabel("اضافه‌کاری", PersianDigits.of(
+                        CardexSummaryPresentation.clockDuration(
+                                stats.grossOvertimeMinutes))), FG_OT,
+                statLabel("مرخصی", PersianDigits.of(
+                        CardexSummaryPresentation.clockDuration(
+                                stats.leaveMinutes))), 0xff007c91,
+                statLabel("استراحت", PersianDigits.of(
+                        CardexSummaryPresentation.clockDuration(
+                                stats.restMinutes))), 0xff176ab0));
+
+        // Fridays override coincident official holidays. These are relevant
+        // scheduled workdays with leave already excluded, including future days.
+        monthSummary.addView(statsTripleRow(
+                statLabel("جمعه‌کاری", PersianDigits.of(
+                        CardexSummaryPresentation.numberOnly(applicableFridays))),
+                0xffc62828,
+                statLabel("تعطیل‌کاری", PersianDigits.of(
+                        CardexSummaryPresentation.numberOnly(applicableHolidays))),
+                0xffc62828,
+                statLabel("تعویض شیفت", PersianDigits.of(
+                        CardexSummaryPresentation.numberOnly(swaps))),
+                FG_SWAP));
     }
 
-    private View summaryCell(String label, int count, int bg, int fg) {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setPadding(Ui.dp(this, 2), Ui.dp(this, 3), Ui.dp(this, 2), Ui.dp(this, 3));
-        box.setBackground(Ui.roundedStroke(bg, 0x22000000, 9, this));
-
-        TextView title = Ui.text(this, label, 8.2f, fg);
-        title.setGravity(Gravity.CENTER);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setSingleLine(true);
-
-        TextView value = Ui.text(
-                this, PersianDigits.of(String.valueOf(count)), 11.5f, Ui.TEXT);
-        value.setGravity(Gravity.CENTER);
-        value.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-
-        box.addView(title, new LinearLayout.LayoutParams(-1, 0, 1f));
-        box.addView(value, new LinearLayout.LayoutParams(-1, 0, 1f));
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1f);
-        lp.setMargins(Ui.dp(this, 1), 0, Ui.dp(this, 1), 0);
-        box.setLayoutParams(lp);
-        return box;
+    private String statLabel(String title, String value) {
+        // Keep HH:MM in the correct visual order in a Persian RTL sentence.
+        if (value.matches("[0-9\u06F0-\u06F9]+:[0-9\u06F0-\u06F9]{2}")) {
+            value = "\u200e" + value + "\u200e";
+        }
+        return title + ": " + value;
     }
 
-    private void renderTotals(
-            CardexStats stats, int fridayWorkMinutes, int holidayWorkMinutes) {
-        if (monthTotals == null) return;
-        monthTotals.removeAllViews();
-        monthTotals.addView(totalCell("اضافه‌کاری", stats.overtimeMinutes, BG_OT, FG_OT));
-        monthTotals.addView(totalCell("مرخصی", stats.leaveMinutes, BG_LEAVE, FG_LEAVE));
-        monthTotals.addView(totalCell("جمعه‌کاری", fridayWorkMinutes, 0xffffe8ec, 0xffa33b50));
-        monthTotals.addView(totalCell("تعطیل‌کاری", holidayWorkMinutes, 0xffffefe2, 0xffa55324));
-        monthTotals.addView(totalCell("استراحت", stats.restMinutes, BG_REST, FG_REST));
+    private View statsTripleRow(String first, int firstColor,
+            String second, int secondColor, String third, int thirdColor) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(statsTripleCell(first, firstColor),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        row.addView(statsTripleCell(second, secondColor),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        row.addView(statsTripleCell(third, thirdColor),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        return row;
     }
 
-    private View totalCell(String label, int minutes, int bg, int fg) {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setBackground(Ui.roundedStroke(bg, 0x22000000, 11, this));
+    private View statsTripleCell(String text, int labelColor) {
+        // On real phone screenshots, 24sp values and titles placed BESIDE each
+        // other in a one-third-wide cell overlap or crush the title. Each of
+        // the six metrics therefore gets TWO lines INSIDE its allocated third:
+        // a readable title on top and a large centered value below. The overall
+        // summary remains exactly 2 ROWS of 3 metrics and has no extra cards.
+        int divider = text.indexOf(':');
+        String title = divider > 0 ? text.substring(0, divider) : text;
+        String value = divider > 0 ? text.substring(divider + 1).trim() : "";
 
-        TextView title = Ui.text(this, label, 9.3f, fg);
-        title.setGravity(Gravity.CENTER);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        TextView value = Ui.text(this,
-                PersianDigits.of(CardexStats.formatDuration(minutes)), 10.5f, Ui.TEXT);
-        value.setGravity(Gravity.CENTER);
-        value.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        LinearLayout cell = new LinearLayout(this);
+        cell.setOrientation(LinearLayout.VERTICAL);
+        cell.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        cell.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        cell.setPadding(Ui.dp(this, 2), Ui.dp(this, 7),
+                Ui.dp(this, 2), Ui.dp(this, 7));
 
-        box.addView(title, new LinearLayout.LayoutParams(-1, Ui.dp(this, 26)));
-        box.addView(value, new LinearLayout.LayoutParams(-1, Ui.dp(this, 30)));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, Ui.dp(this, 52), 1f);
-        params.setMargins(Ui.dp(this, 2), 0, Ui.dp(this, 2), 0);
-        box.setLayoutParams(params);
-        return box;
+        TextView label = Ui.text(this, title, 12.5f, labelColor);
+        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        label.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        label.setTextDirection(View.TEXT_DIRECTION_RTL);
+        label.setGravity(Gravity.CENTER);
+        label.setSingleLine(true);
+        label.setIncludeFontPadding(false);
+        // Autosize the TITLE only when needed for particularly narrow phones.
+        androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                label, 11, 14, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+        cell.addView(label, new LinearLayout.LayoutParams(-1, -2));
+
+        TextView number = Ui.text(this, value, 22f, Ui.TEXT);
+        number.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22f);
+        number.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        number.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        number.setTextDirection(View.TEXT_DIRECTION_LTR);
+        number.setGravity(Gravity.CENTER);
+        number.setSingleLine(true);
+        number.setIncludeFontPadding(false);
+        // Full-width number cell, not side-by-side with the title; no squashing.
+        cell.addView(number, Ui.margins(this, -1, -2, 0, 4, 0, 0));
+
+        cell.setContentDescription(title + ": " + value);
+        return cell;
     }
 
     private GradientDrawable todayRowBackground() {
@@ -882,6 +901,7 @@ public final class CardexActivity extends BaseActivity {
         selectorScroll.setFillViewport(false);
         LinearLayout selector = new LinearLayout(this);
         selector.setOrientation(LinearLayout.VERTICAL);
+        selector.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         selector.setPadding(
                 Ui.dp(this, 16), Ui.dp(this, 10),
                 Ui.dp(this, 16), Ui.dp(this, 12));
@@ -985,9 +1005,9 @@ public final class CardexActivity extends BaseActivity {
         }
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("مرخصی گروهی — "
+                .setCustomTitle(Ui.rtlDialogTitle(this,"مرخصی گروهی — "
                         + selected.monthName() + " "
-                        + PersianDigits.of(String.valueOf(selected.year)))
+                        + PersianDigits.of(String.valueOf(selected.year))))
                 .setView(selectorScroll)
                 .setPositiveButton("اعمال تغییرات", null)
                 .setNegativeButton("انصراف", null)

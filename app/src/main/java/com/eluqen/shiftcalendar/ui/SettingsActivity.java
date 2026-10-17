@@ -277,7 +277,7 @@ public final class SettingsActivity extends BaseActivity {
     }
 
     void handleBuildUiCallback9(View view) {
-        showEvents();
+        HubGeneral.openPersonalEvents(this);
     }
 
     void handleBuildUiCallback10(View view) {

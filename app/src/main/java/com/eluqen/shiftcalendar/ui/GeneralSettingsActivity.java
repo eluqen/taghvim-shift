@@ -15,6 +15,7 @@ public final class GeneralSettingsActivity extends BaseActivity {
  private SettingsFeaturesUi.Row reminderRow;
  private ScrollView settingsScroll;
  private boolean resetScrollOnResume;
+ private String renderedThemeKey;
  private int dp(float v){return Math.round(v*getResources().getDisplayMetrics().density);}
  private android.content.SharedPreferences prefs(){return getSharedPreferences("eluqen_shift_calendar_preferences",0);}
 
@@ -106,6 +107,10 @@ public final class GeneralSettingsActivity extends BaseActivity {
  @Override protected void onCreate(Bundle state){
   super.onCreate(state);
   resetScrollOnResume = state == null;
+  buildSettingsUi(state == null ? 0 : state.getInt(STATE_SCROLL_Y,0));
+ }
+ private void buildSettingsUi(int restoreY){
+  // Repaint the existing settings activity after a theme change, not the activity stack.
   LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
   root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setBackgroundColor(Ui.SURFACE);
   ScrollView scroll=new ScrollView(this);settingsScroll=scroll;scroll.setFillViewport(false);scroll.setClipToPadding(false);
@@ -114,10 +119,8 @@ public final class GeneralSettingsActivity extends BaseActivity {
   addShiftSection(body);addDisplaySection(body);addCalendarSection(body);
   addWorkSection(body);addDataSection(body);addUpdateSupportSection(body);
   setContentView(root);
-  if(state!=null){
-   final int y=state.getInt(STATE_SCROLL_Y,0);
-   scroll.post(()->scroll.scrollTo(0,y));
-  }
+  renderedThemeKey=AppTheme.currentKey(this);
+  if(restoreY>0)scroll.post(()->scroll.scrollTo(0,restoreY));
  }
  @Override protected void onNewIntent(Intent intent){
   super.onNewIntent(intent);setIntent(intent);
@@ -129,6 +132,10 @@ public final class GeneralSettingsActivity extends BaseActivity {
  }
  @Override protected void onResume(){
   super.onResume();
+  if(SettingsThemeRefresh.needsRepaint(renderedThemeKey,AppTheme.currentKey(this))){
+   int previousScroll=settingsScroll==null?0:settingsScroll.getScrollY();
+   buildSettingsUi(previousScroll);
+  }
   refreshReminderIndicator();
   if(resetScrollOnResume){ScrollTopReset.top(this);resetScrollOnResume=false;}
  }

@@ -31,6 +31,10 @@ public final class AppDatabase extends SQLiteOpenHelper {
             public boolean hasColumn(String name) { return AppDatabase.hasColumn(db, "cardex", name); }
             public void exec(String sql) { db.execSQL(sql); }
         });
+        // Additive migration only. Do not rebuild or clear existing colleague data.
+        if (!hasColumn(db, "colleagues", "extra_phones")) {
+            db.execSQL("ALTER TABLE colleagues ADD COLUMN extra_phones TEXT NOT NULL DEFAULT '[]'");
+        }
     }
 
     private static boolean hasColumn(SQLiteDatabase db, String table, String column) {
@@ -67,11 +71,21 @@ public final class AppDatabase extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        // Additive and version-neutral. Older QA versions can still open this DB
+        // on rollback; upgrading the overall user_version would break that path.
+        if (!db.isReadOnly() && !hasColumn(db, "colleagues", "extra_phones")) {
+            db.execSQL("ALTER TABLE colleagues ADD COLUMN extra_phones TEXT NOT NULL DEFAULT '[]'");
+        }
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase sQLiteDatabase) {
         sQLiteDatabase.execSQL("CREATE TABLE shift_plans (id INTEGER PRIMARY KEY AUTOINCREMENT, company TEXT NOT NULL, team TEXT NOT NULL, anchor_jdn INTEGER NOT NULL, pattern TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 0)");
         sQLiteDatabase.execSQL(CardexSchema.CREATE);
         sQLiteDatabase.execSQL("CREATE INDEX cardex_jdn ON cardex(jdn)");
-        sQLiteDatabase.execSQL("CREATE TABLE colleagues (id INTEGER PRIMARY KEY AUTOINCREMENT, team TEXT NOT NULL DEFAULT '', name TEXT NOT NULL, role TEXT NOT NULL DEFAULT '', mobile1 TEXT NOT NULL DEFAULT '', mobile2 TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', info TEXT NOT NULL DEFAULT '')");
+        sQLiteDatabase.execSQL("CREATE TABLE colleagues (id INTEGER PRIMARY KEY AUTOINCREMENT, team TEXT NOT NULL DEFAULT '', name TEXT NOT NULL, role TEXT NOT NULL DEFAULT '', mobile1 TEXT NOT NULL DEFAULT '', mobile2 TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', info TEXT NOT NULL DEFAULT '', extra_phones TEXT NOT NULL DEFAULT '[]')");
         sQLiteDatabase.execSQL("CREATE TABLE user_events (id INTEGER PRIMARY KEY AUTOINCREMENT, year INTEGER NOT NULL DEFAULT 0, month INTEGER NOT NULL, day INTEGER NOT NULL, title TEXT NOT NULL, holiday INTEGER NOT NULL DEFAULT 0)");
         seedPresets(sQLiteDatabase);
     }
@@ -495,6 +509,7 @@ public final class AppDatabase extends SQLiteOpenHelper {
                 contentValues.put("mobile2", jSONObject.optString("mobile2"));
                 contentValues.put("phone", jSONObject.optString("phone"));
                 contentValues.put("info", jSONObject.optString("info"));
+                contentValues.put("extra_phones", com.eluqen.shiftcalendar.ui.ColleagueNumbers.importJson(jSONObject.opt("extraPhones")));
             } else {
                 contentValues.put("year", Integer.valueOf(jSONObject.optInt("year")));
                 contentValues.put("month", Integer.valueOf(jSONObject.getInt("month")));
@@ -541,6 +556,7 @@ public final class AppDatabase extends SQLiteOpenHelper {
             jSONObject.put("mobile2", colleague.mobile2);
             jSONObject.put("phone", colleague.phone);
             jSONObject.put("info", colleague.info);
+            jSONObject.put("extraPhones", com.eluqen.shiftcalendar.ui.ColleagueNumbers.decode(colleague.extraPhonesJson));
             jSONArray.put(jSONObject);
         }
         return jSONArray;
@@ -592,6 +608,8 @@ public final class AppDatabase extends SQLiteOpenHelper {
         colleague.mobile2 = cursor.getString(cursor.getColumnIndexOrThrow("mobile2"));
         colleague.phone = cursor.getString(cursor.getColumnIndexOrThrow("phone"));
         colleague.info = cursor.getString(cursor.getColumnIndexOrThrow("info"));
+        int extrasColumn = cursor.getColumnIndex("extra_phones");
+        colleague.extraPhonesJson = extrasColumn >= 0 ? cursor.getString(extrasColumn) : "[]";
         return colleague;
     }
 
@@ -640,6 +658,7 @@ public final class AppDatabase extends SQLiteOpenHelper {
         contentValues.put("mobile2", safe(colleague.mobile2));
         contentValues.put("phone", safe(colleague.phone));
         contentValues.put("info", safe(colleague.info));
+        contentValues.put("extra_phones", com.eluqen.shiftcalendar.ui.ColleagueNumbers.importJson(colleague.extraPhonesJson));
         return contentValues;
     }
 

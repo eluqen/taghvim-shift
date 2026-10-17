@@ -25,6 +25,7 @@ public final class BackDock {
  private static final String[] LABELS={"تقویم","چهارشیفت","کارکرد","تنظیمات","امکانات"};
  private static final String[] SETTINGS_CHILDREN={
    "SettingsActivity",
+   "PersonalEventsActivity",
    "ShiftTypesActivity",
    "ReminderSettingsActivity",
    "ColleaguesActivity",

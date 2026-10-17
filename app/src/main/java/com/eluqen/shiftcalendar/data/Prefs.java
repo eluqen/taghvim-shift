@@ -246,7 +246,9 @@ public final class Prefs {
     }
 
     public static void setReminderEnabled(Context context, boolean z) {
-        values(context).edit().putBoolean(REMINDER_ENABLED, z).apply();
+        if (!values(context).edit().putBoolean(REMINDER_ENABLED, z).commit()) {
+            throw new IllegalStateException("Reminder preference could not be saved");
+        }
     }
 
     public static int reminderLeadMinutes(Context context) {
@@ -254,7 +256,7 @@ public final class Prefs {
     }
 
     public static void setReminderLeadMinutes(Context context, int i) {
-        values(context).edit().putInt(REMINDER_LEAD_MINUTES, Math.max(0, Math.min(1440, i))).apply();
+        values(context).edit().putInt(REMINDER_LEAD_MINUTES, Math.max(0, Math.min(1440, i))).commit();
     }
 
     public static boolean reminderSound(Context context) {
@@ -262,7 +264,7 @@ public final class Prefs {
     }
 
     public static void setReminderSound(Context context, boolean z) {
-        values(context).edit().putBoolean(REMINDER_SOUND, z).apply();
+        values(context).edit().putBoolean(REMINDER_SOUND, z).commit();
     }
 
     public static boolean reminderVibration(Context context) {
@@ -270,7 +272,7 @@ public final class Prefs {
     }
 
     public static void setReminderVibration(Context context, boolean z) {
-        values(context).edit().putBoolean(REMINDER_VIBRATION, z).apply();
+        values(context).edit().putBoolean(REMINDER_VIBRATION, z).commit();
     }
 
     public static String reminderZone(Context context) {
@@ -283,7 +285,7 @@ public final class Prefs {
         if (!REMINDER_ZONE_TEHRAN.equals(str)) {
             str2 = REMINDER_ZONE_DEVICE;
         }
-        editorEdit.putString(REMINDER_ZONE, str2).apply();
+        editorEdit.putString(REMINDER_ZONE, str2).commit();
     }
 
     public static long lastReminderSchedule(Context context) {

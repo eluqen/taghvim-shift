@@ -44,6 +44,29 @@ public final class Ui {
         return textView;
     }
 
+    /** Consistent right-aligned Persian heading for Android AlertDialogs. */
+    public static TextView rtlDialogTitle(Context context, String title) {
+        TextView heading = text(context, title, 18f, TEXT);
+        heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        heading.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        heading.setTextDirection(View.TEXT_DIRECTION_RTL);
+        heading.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.CENTER_VERTICAL);
+        heading.setPadding(dp(context,24),dp(context,17),
+                dp(context,24),dp(context,10));
+        return heading;
+    }
+
+    public static TextView rtlDialogMessage(Context context, String body) {
+        TextView message = text(context, body, 15f, TEXT);
+        message.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        message.setTextDirection(View.TEXT_DIRECTION_RTL);
+        message.setGravity(android.view.Gravity.RIGHT | android.view.Gravity.TOP);
+        message.setLineSpacing(dp(context,3),1.1f);
+        message.setPadding(dp(context,24),dp(context,8),
+                dp(context,24),dp(context,20));
+        return message;
+    }
+
     public static TextView title(Context context, String str, float f) {
         TextView textViewText = text(context, str, f, TEXT);
         textViewText.setTypeface(Typeface.DEFAULT, android.graphics.Typeface.BOLD);

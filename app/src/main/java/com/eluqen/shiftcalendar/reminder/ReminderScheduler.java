@@ -65,6 +65,13 @@ public final class ReminderScheduler {
             Prefs.recordReminderSchedule(app, "یادآوری شیفت غیرفعال است");
             return new ScheduleResult(0, null, true);
         }
+        if (!com.eluqen.shiftcalendar.ui.ReminderPermissionGate.notificationsAllowed(app)) {
+            // Keep the saved enabled choice even if the OS has revoked the
+            // notification permission, for example during app maintenance.
+            Prefs.recordReminderSchedule(app,
+                "مجوز اعلان در اندروید غیرفعال است؛ تنظیمات شما حفظ شده‌اند");
+            return new ScheduleResult(0, null, false);
+        }
 
         AlarmManager alarmManager =
                 (AlarmManager) app.getSystemService(Context.ALARM_SERVICE);

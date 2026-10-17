@@ -53,7 +53,7 @@ public final class AppTheme {
     public static void set(Context context, String key) {
         Palette selected = palette(key);
         context.getSharedPreferences(PREFS, 0)
-                .edit().putString(KEY, selected.key).apply();
+                .edit().putString(KEY, selected.key).commit();
         apply(context);
         MainPageSwipe.dropCachedPreviews(context);
     }

@@ -162,10 +162,10 @@ public final class ReminderPermissionGate {
    return;
   }
 
-  if(a.getSharedPreferences(PREFS,0).getBoolean(ENABLED,false)){
-   disable(a);
-  }else{
-   setUi(a,false);
-  }
+  // Permission can be temporarily unavailable after an OS/app update.
+  // Never overwrite the user's previously persisted ON preference here.
+  // The settings screen reports the missing permission and schedules again
+  // once Android grants it; the user's choice must survive that transition.
+  setUi(a,a.getSharedPreferences(PREFS,0).getBoolean(ENABLED,false));
  }
 }

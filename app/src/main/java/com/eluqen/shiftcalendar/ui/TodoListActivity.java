@@ -97,7 +97,12 @@ public final class TodoListActivity extends Activity {
   TaskText title=new TaskText(this);title.setText(o.optString("text",""));title.setTextSize(done?doneSize():normalSize());
   title.setTextColor(done?doneColor():normalColor());title.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
   title.setTypeface(Typeface.DEFAULT,(done?boldDone():boldNormal())?Typeface.BOLD:Typeface.NORMAL);
-  title.setPadding(dp(6),dp(4),dp(6),dp(4));title.setMaxLines(Integer.MAX_VALUE);title.style(done,strikeColor());
+  // The task editor retains the complete text; only this list preview is bounded.
+  title.setPadding(dp(6),dp(4),dp(6),dp(4));
+  title.setMaxLines(2);
+  title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+  title.setTextDirection(View.TEXT_DIRECTION_RTL);
+  title.style(done,strikeColor());
   title.setOnClickListener(v->editTaskById(id));
   card.addView(title,new LinearLayout.LayoutParams(0,-2,1));
 
@@ -115,7 +120,7 @@ public final class TodoListActivity extends Activity {
   try{a.getJSONObject(i).put("done",done);save(a);render();}catch(Exception ignored){}
  }
  private void deleteTask(long id,String label){
-  new AlertDialog.Builder(this).setTitle("حذف کار").setMessage("«"+label+"» حذف شود؟")
+  new AlertDialog.Builder(this).setCustomTitle(Ui.rtlDialogTitle(this,"حذف کار")).setMessage("«"+label+"» حذف شود؟")
    .setNegativeButton("انصراف",null).setPositiveButton("حذف",(d,w)->{
     JSONArray a=load(),n=new JSONArray();for(int i=0;i<a.length();i++){JSONObject o=a.optJSONObject(i);if(o!=null&&o.optLong("id")!=id)n.put(o);}
     save(n);render();
@@ -183,7 +188,7 @@ public final class TodoListActivity extends Activity {
   });dlg.show();
  }
  private void confirmReset(AlertDialog parent){
-  new AlertDialog.Builder(this).setTitle("بازنشانی تنظیمات").setMessage("فقط ظاهر فهرست به حالت پیش‌فرض برمی‌گردد. هیچ کاری از لیست حذف نمی‌شود.")
+  new AlertDialog.Builder(this).setCustomTitle(Ui.rtlDialogTitle(this,"بازنشانی تنظیمات")).setMessage("فقط ظاهر فهرست به حالت پیش‌فرض برمی‌گردد. هیچ کاری از لیست حذف نمی‌شود.")
    .setNegativeButton("انصراف",null).setPositiveButton("بازنشانی",(d,w)->{
     prefs().edit().remove(K_NORMAL_SIZE).remove(K_DONE_SIZE).remove(K_NORMAL_COLOR).remove(K_DONE_COLOR).remove(K_STRIKE_COLOR).remove(K_BOLD_NORMAL).remove(K_BOLD_DONE).remove(K_STRIKE).apply();
     parent.dismiss();render();Toast.makeText(this,"تنظیمات ظاهری بازنشانی شد",Toast.LENGTH_SHORT).show();

@@ -74,48 +74,7 @@ public final class HubGeneral {
   HijriCorrectionDialog.show(a,null);
  }
  private static void personal(Activity a){
-  try{Object[] date={now()};DualDatePicker.show(a,date[0],new DualDatePicker.Result(){
-   public void selected(Object chosen){date[0]=chosen;eventList(a,date[0]);}
-  });}catch(Exception e){Toast.makeText(a,"انتخاب تاریخ مقدور نیست",Toast.LENGTH_LONG).show();}
- }
- private static void eventList(Activity a,Object date){
-  try{
-   Object db=db(a);List<?> events=(List<?>)db.getClass().getMethod("userEvents",Class.forName(CORE+"PersianDate")).invoke(db,date);
-   String[] options=new String[events.size()+1];options[0]="＋ افزودن مناسبت به "+date;
-   for(int i=0;i<events.size();i++)options[i+1]=(String)events.get(i).getClass().getField("title").get(events.get(i));
-   new AlertDialog.Builder(a).setTitle("مناسبت‌های شخصی").setAdapter(FancyDialogs.list(a,options),(dialog,index)->{
-    if(index==0)newEvent(a,date);
-    else new AlertDialog.Builder(a).setTitle(options[index]).setMessage("این مناسبت حذف شود؟")
-     .setNegativeButton("انصراف",null).setPositiveButton("حذف",(d,w)->{try{
-      db.getClass().getMethod("deleteUserEvent",long.class).invoke(db,events.get(index-1).getClass().getField("id").getLong(events.get(index-1)));
-      Toast.makeText(a,"مناسبت حذف شد",Toast.LENGTH_SHORT).show();
-      eventList(a,date);
-     }catch(Exception ex){Toast.makeText(a,"حذف ناموفق بود",Toast.LENGTH_LONG).show();}}).show();
-   }).setNegativeButton("بستن",null).show();
-  }catch(Exception e){android.util.Log.e("ELUQEN_HUB","Personal events failed",e);}
- }
- private static void newEvent(Activity a,Object date){
-  EditText name=new EditText(a);name.setHint("عنوان مناسبت");name.setSingleLine(true);
-  CheckBox annual=new CheckBox(a);annual.setText("هر سال تکرار شود");annual.setChecked(true);
-  CheckBox holiday=new CheckBox(a);holiday.setText("تعطیل علامت‌گذاری شود");
-  LinearLayout form=new LinearLayout(a);form.setPadding(dp(a,15),0,dp(a,15),0);form.setOrientation(android.widget.LinearLayout.VERTICAL);form.addView(name);form.addView(annual);form.addView(holiday);
-  AlertDialog dialog=new AlertDialog.Builder(a).setTitle("مناسبت جدید").setView(form)
-   .setNegativeButton("انصراف",null).setPositiveButton("ذخیره",null).create();
-  dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-   String value=name.getText().toString().trim();
-   if(value.isEmpty()){name.setError("عنوان مناسبت را وارد کنید");name.requestFocus();return;}
-   try{
-    Object item=Class.forName(DATA+"UserEvent").getConstructor().newInstance();
-    item.getClass().getField("year").setInt(item,annual.isChecked()?0:date.getClass().getField("year").getInt(date));
-    item.getClass().getField("month").setInt(item,date.getClass().getField("month").getInt(date));
-    item.getClass().getField("day").setInt(item,date.getClass().getField("day").getInt(date));
-    item.getClass().getField("title").set(item,value);
-    item.getClass().getField("holiday").setBoolean(item,holiday.isChecked());
-    Object database=db(a);database.getClass().getMethod("saveUserEvent",item.getClass()).invoke(database,item);
-    Toast.makeText(a,"مناسبت ذخیره شد",Toast.LENGTH_SHORT).show();dialog.dismiss();eventList(a,date);
-   }catch(Exception e){Toast.makeText(a,"ثبت مناسبت انجام نشد",Toast.LENGTH_LONG).show();}
-  }));
-  dialog.show();
+  a.startActivity(new Intent(a, PersonalEventsActivity.class));
  }
  private static void document(Activity a,boolean save){
   Intent i=new Intent(save?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);

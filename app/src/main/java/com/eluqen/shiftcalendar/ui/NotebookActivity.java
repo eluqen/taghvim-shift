@@ -16,7 +16,7 @@ import java.util.*;
 
 public final class NotebookActivity extends Activity implements BackDock.LocalBackHandler{
  private static final String STORE="eluqen_private_notebook",KEY="items";
- private LinearLayout base,list; private EditText title,body,search; private Ink ink; private String editing,initialTitle="",initialBody="",initialInk="[]"; private boolean initialPinned; private int initialColor; private boolean pinnedOnly,notePinned,selectionMode; private int noteColor=0xfffff7d6; private final HashSet<String> selected=new HashSet<>(); private Button bulkButton,selectButton;
+ private LinearLayout base,list; private EditText title,body,search; private Ink ink; private String editing,initialTitle="",initialBody="",initialInk="[]"; private boolean initialPinned,initialPrivate; private int initialColor; private boolean pinnedOnly,notePinned,notePrivate,selectionMode; private int noteColor=0xfffff7d6; private final HashSet<String> selected=new HashSet<>(); private Button bulkButton,selectButton;
  private int dp(float v){return Math.round(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable bg(int color,float r,int stroke){GradientDrawable g=new GradientDrawable();g.setColor(color);g.setCornerRadius(dp(r));if(stroke!=0)g.setStroke(dp(1),stroke);return g;}
  private TextView text(String s,float z,int c,boolean b){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);if(b)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;}
@@ -58,31 +58,57 @@ public final class NotebookActivity extends Activity implements BackDock.LocalBa
   for(int i=0;i<notes.size();i++)addCard(notes.get(i),i+1);
  }
  private void addCard(JSONObject n,int number){
-  int color=n.optInt("color",0xfffff7d6);LinearLayout card=new LinearLayout(this);card.setOrientation(android.widget.LinearLayout.VERTICAL);card.setPadding(dp(13),dp(10),dp(13),dp(10));card.setBackground(bg(color,16,0xffd9e2e8));
+  boolean pinned=n.optBoolean("pinned",false);
+  int color=n.optInt("color",0xfffff7d6);LinearLayout card=new LinearLayout(this);card.setOrientation(android.widget.LinearLayout.VERTICAL);card.setPadding(dp(13),dp(10),dp(13),dp(10));GradientDrawable frame=bg(color,16,0);frame.setStroke(dp(pinned?3:1),pinned?0xff087649:0xffd9e2e8);card.setBackground(frame);
+  if(pinned){TextView marker=text("📌  سنجاق‌شده",13,0xff086845,true);
+   marker.setPadding(dp(8),dp(5),dp(8),dp(7));marker.setBackground(bg(0xffc8e7d7,9,0xff087649));
+   card.addView(marker,new LinearLayout.LayoutParams(-1,-2));}
   LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);top.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
   String id=n.optString("id","");if(selectionMode){CheckBox choose=new CheckBox(this);choose.setChecked(selected.contains(id));choose.setScaleX(1.15f);choose.setScaleY(1.15f);choose.setOnCheckedChangeListener((b,on)->{if(on)selected.add(id);else selected.remove(id);updateBulkState();});top.addView(choose,new LinearLayout.LayoutParams(dp(50),dp(50)));}
-  String name=n.optString("title","").trim();if(name.isEmpty())name="یادداشت بدون عنوان";
-  TextView h=text(number+".  "+(n.optBoolean("pinned",false)?"📌  ":"")+name,17,Ui.TEXT,true);top.addView(h,new LinearLayout.LayoutParams(0,-2,1));
-  TextView date=text(formatTime(n.optLong("updated")),11.5f,0xff748292,false);date.setGravity(Gravity.CENTER);top.addView(date,new LinearLayout.LayoutParams(dp(105),dp(36)));card.addView(top);
-  String preview=n.optString("body","").trim();if(!preview.isEmpty()){TextView p=text(preview,13,0xff56697d,false);p.setMaxLines(3);p.setEllipsize(TextUtils.TruncateAt.END);p.setPadding(0,dp(4),0,dp(7));card.addView(p);}
+  boolean isPrivate=n.optBoolean("private",false);
+  String name=NotebookPrivacy.listTitle(n.optString("title",""),isPrivate);
+  TextView h=text(number+".  "+(isPrivate?"◈  ":"")+name,17,pinned?0xff075c40:Ui.TEXT,true);top.addView(h,new LinearLayout.LayoutParams(0,-2,1));
+  card.addView(top);
+  TextView date=text("آخرین ویرایش: "+formatTime(n.optLong("updated")),13,pinned?0xff087649:0xff748292,false);
+  date.setTextDirection(View.TEXT_DIRECTION_RTL);
+  date.setPadding(0,dp(3),0,dp(4));
+  card.addView(date,new LinearLayout.LayoutParams(-1,-2));
+  String preview=NotebookPrivacy.listPreview(n.optString("body",""),isPrivate);if(!preview.isEmpty()){TextView p=text(preview,13,0xff56697d,false);p.setMaxLines(3);p.setEllipsize(TextUtils.TruncateAt.END);p.setPadding(0,dp(4),0,dp(7));card.addView(p);}
   LinearLayout actions=new LinearLayout(this);actions.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
   Button open=button("ویرایش");open.setOnClickListener(v->showEditor(n));actions.addView(open,new LinearLayout.LayoutParams(0,dp(42),1));
   Button pin=button(n.optBoolean("pinned",false)?"برداشتن سنجاق":"سنجاق");pin.setOnClickListener(v->togglePin(n));actions.addView(pin,new LinearLayout.LayoutParams(0,dp(42),1));
   Button del=button("حذف");del.setOnClickListener(v->delete(n));actions.addView(del,new LinearLayout.LayoutParams(0,dp(42),1));card.addView(actions);
   LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,0,0,dp(10));list.addView(card,lp);
  }
- private String formatTime(long t){if(t<=0)return "";return new SimpleDateFormat("yyyy/MM/dd  HH:mm",Locale.US).format(new Date(t));}
+ private String formatTime(long t){
+  if(t<=0)return "";
+  String date=com.eluqen.shiftcalendar.core.PersianDigits.of(
+     PlannerDateTime.jalali(t,TimeZone.getDefault()).toString());
+  String time=com.eluqen.shiftcalendar.core.PersianDigits.of(
+     new SimpleDateFormat("HH:mm",Locale.US).format(new Date(t)));
+  return date+"  "+time;
+ }
  private void togglePin(JSONObject note){try{note.put("pinned",!note.optBoolean("pinned",false));note.put("updated",System.currentTimeMillis());replace(note);showList();}catch(Exception ignored){}}
  private void delete(JSONObject note){new AlertDialog.Builder(this).setMessage("این یادداشت حذف شود؟").setNegativeButton("انصراف",null).setPositiveButton("حذف",(d,w)->{JSONArray a=items(this),n=new JSONArray();for(int i=0;i<a.length();i++){JSONObject x=a.optJSONObject(i);if(x!=null&&!note.optString("id").equals(x.optString("id")))n.put(x);}write(this,n);showList();}).show();}
  private void replace(JSONObject note){JSONArray a=items(this),n=new JSONArray();for(int i=0;i<a.length();i++){JSONObject x=a.optJSONObject(i);if(x!=null&&!note.optString("id").equals(x.optString("id")))n.put(x);}n.put(note);write(this,n);}
  private void showEditor(JSONObject note){
-  editing=note==null?UUID.randomUUID().toString():note.optString("id",UUID.randomUUID().toString());notePinned=note!=null&&note.optBoolean("pinned",false);noteColor=note==null?0xfffff7d6:note.optInt("color",0xfffff7d6);initialTitle=note==null?"":note.optString("title","");initialBody=note==null?"":note.optString("body","");initialPinned=notePinned;initialColor=noteColor;initialInk=note==null?"[]":note.optJSONArray("ink")==null?"[]":note.optJSONArray("ink").toString();
+  editing=note==null?UUID.randomUUID().toString():note.optString("id",UUID.randomUUID().toString());notePinned=note!=null&&note.optBoolean("pinned",false);noteColor=note==null?0xfffff7d6:note.optInt("color",0xfffff7d6);initialTitle=note==null?"":note.optString("title","");initialBody=note==null?"":note.optString("body","");initialPinned=notePinned;notePrivate=note!=null&&note.optBoolean("private",false);initialPrivate=notePrivate;initialColor=noteColor;initialInk=note==null?"[]":note.optJSONArray("ink")==null?"[]":note.optJSONArray("ink").toString();
   shell(note==null?"یادداشت جدید":"ویرایش یادداشت");
   LinearLayout actions=new LinearLayout(this);actions.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);actions.setPadding(dp(10),dp(6),dp(10),dp(4));
   Button save=button("✓ ذخیره");actions.addView(save,new LinearLayout.LayoutParams(0,dp(48),1));
   Button cancel=button("✕ لغو");cancel.setOnClickListener(v->requestCloseEditor());actions.addView(cancel,new LinearLayout.LayoutParams(0,dp(48),1));
   Button pin=button(notePinned?"📌 سنجاق‌شده":"📌 سنجاق");pin.setOnClickListener(v->{notePinned=!notePinned;pin.setText(notePinned?"📌 سنجاق‌شده":"📌 سنجاق");});actions.addView(pin,new LinearLayout.LayoutParams(0,dp(48),1));
   base.addView(actions);
+  CheckBox privateMode=new CheckBox(this);
+  privateMode.setText("یادداشت خصوصی؛ عنوان و متن در فهرست پنهان باشد");
+  privateMode.setTextColor(Ui.TEXT);
+  privateMode.setTextSize(14);
+  privateMode.setChecked(notePrivate);
+  privateMode.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+  privateMode.setOnCheckedChangeListener((button,checked)->notePrivate=checked);
+  LinearLayout.LayoutParams privateLp=new LinearLayout.LayoutParams(-1,dp(48));
+  privateLp.setMargins(dp(13),0,dp(13),dp(4));
+  base.addView(privateMode,privateLp);
   ScrollView sc=new ScrollView(this);sc.setVerticalScrollBarEnabled(true);sc.setScrollbarFadingEnabled(false);sc.setFillViewport(false);LinearLayout content=new LinearLayout(this);content.setOrientation(android.widget.LinearLayout.VERTICAL);content.setPadding(dp(12),dp(6),dp(12),dp(110));sc.addView(content);base.addView(sc,new LinearLayout.LayoutParams(-1,0,1));
   LinearLayout paper=new LinearLayout(this);paper.setOrientation(android.widget.LinearLayout.VERTICAL);paper.setPadding(dp(12),dp(10),dp(12),dp(10));paper.setBackground(bg(noteColor,17,0xffd9e2e8));content.addView(paper);
   title=new EditText(this);title.setSingleLine(true);title.setHint("عنوان یادداشت — الزامی");title.setTextSize(19);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);title.setText(note==null?"":note.optString("title"));paper.addView(title);
@@ -121,11 +147,11 @@ public final class NotebookActivity extends Activity implements BackDock.LocalBa
  private void persist(){
   if(editing==null||title==null||body==null||ink==null)return;String t=title.getText().toString().trim(),b=body.getText().toString().trim();JSONArray paths=ink.dump();
   if(t.isEmpty())return;
-  try{JSONObject n=new JSONObject();n.put("id",editing);n.put("title",t);n.put("body",b);n.put("ink",paths);n.put("updated",System.currentTimeMillis());n.put("pinned",notePinned);n.put("color",noteColor);replace(n);}
+  try{JSONObject n=new JSONObject();n.put("id",editing);n.put("title",t);n.put("body",b);n.put("ink",paths);n.put("updated",System.currentTimeMillis());n.put("pinned",notePinned);n.put("private",notePrivate);n.put("color",noteColor);replace(n);}
   catch(Exception e){Toast.makeText(this,"ذخیره یادداشت انجام نشد",Toast.LENGTH_LONG).show();}
  }
  @Override protected void onResume(){super.onResume();BackDock.refresh(this);ScrollTopReset.top(this);}
- private boolean dirty(){if(editing==null||title==null||body==null||ink==null)return false;return !initialTitle.equals(title.getText().toString())||!initialBody.equals(body.getText().toString())||initialPinned!=notePinned||initialColor!=noteColor||!initialInk.equals(ink.dump().toString());}
+ private boolean dirty(){if(editing==null||title==null||body==null||ink==null)return false;return !initialTitle.equals(title.getText().toString())||!initialBody.equals(body.getText().toString())||initialPinned!=notePinned||initialPrivate!=notePrivate||initialColor!=noteColor||!initialInk.equals(ink.dump().toString());}
  private void requestCloseEditor(){if(editing==null){showList();return;}if(!dirty()){showList();return;}new AlertDialog.Builder(this).setTitle("تغییرات ذخیره نشده").setMessage("این یادداشت تغییر کرده است. می‌خواهید قبل از بازگشت ذخیره شود؟").setNegativeButton("انصراف",null).setNeutralButton("بدون ذخیره",(d,w)->showList()).setPositiveButton("ذخیره و بازگشت",(d,w)->{if(title.getText().toString().trim().isEmpty()){title.setError("برای ذخیره، یک عنوان برای یادداشت وارد کنید");title.requestFocus();Toast.makeText(this,"عنوان یادداشت الزامی است",Toast.LENGTH_LONG).show();return;}persist();showList();}).show();}
  @Override public boolean onDockBack(){if(editing!=null){requestCloseEditor();return true;}return false;}
  private void handleNotebookBack(){if(editing!=null){requestCloseEditor();return;}BackDock.handleBack(this);}

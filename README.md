@@ -2,7 +2,7 @@
 
 An Android calendar and work-record companion for people on rotating shifts. The current app interface is in Persian.
 
-**Version:** 1.0.2
+**Version:** 1.0.3 (build 4)
 **Application ID:** `com.eluqen.shiftcalendar`
 **Minimum Android version:** 6.0 (API 23)
 
@@ -13,6 +13,12 @@ An Android calendar and work-record companion for people on rotating shifts. The
 - Daily work records for shift swaps, leave, rest and overtime
 - Shift reminders, personal tasks, notes and home-screen widget
 - Local backup and restore, and calendar (ICS) export
+
+## Latest release
+
+Version 1.0.3 improves monthly work-statistics readability and colors, and ensures personal-event sorting works on Android 6 and later without changing work-hour calculations.
+
+Download the **Google Play edition APK** from the [GitHub Releases page](https://github.com/eluqen/taghvim-shift/releases/tag/1.0.3). The separate website edition is available from the official ELUQEN site.
 
 ## Official links
 

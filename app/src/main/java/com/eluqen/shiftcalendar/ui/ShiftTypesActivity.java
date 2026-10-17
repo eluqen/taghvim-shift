@@ -83,7 +83,7 @@ public final class ShiftTypesActivity extends BaseActivity {
     }
 
     void handleRenderCallback1(View view) {
-        new AlertDialog.Builder(this).setTitle("بازگردانی تنظیمات").setMessage("عنوان\u200cها، رنگ\u200cها، ساعت\u200cها و وضعیت یادآوری انواع شیفت به حالت اولیه برگردد؟").setPositiveButton("بازگردانی", ShiftTypesActivity.createOnClickCallback14(this)).setNegativeButton("انصراف", (DialogInterface.OnClickListener) null).show();
+        new AlertDialog.Builder(this).setCustomTitle(Ui.rtlDialogTitle(this,"بازگردانی تنظیمات")).setMessage("عنوان\u200cها، رنگ\u200cها، ساعت\u200cها و وضعیت یادآوری انواع شیفت به حالت اولیه برگردد؟").setPositiveButton("بازگردانی", ShiftTypesActivity.createOnClickCallback14(this)).setNegativeButton("انصراف", (DialogInterface.OnClickListener) null).show();
     }
 
     void handleRenderCallback0(DialogInterface dialogInterface, int i) {
@@ -152,7 +152,7 @@ public final class ShiftTypesActivity extends BaseActivity {
         linearLayout.addView(button, field());
         linearLayout.addView(button2, field());
         linearLayout.addView(button3, field());
-        AlertDialog alertDialogCreate = new AlertDialog.Builder(this).setTitle("ویرایش نوع شیفت").setView(linearLayout).setPositiveButton("ذخیره", (DialogInterface.OnClickListener) null).setNegativeButton("انصراف", (DialogInterface.OnClickListener) null).create();
+        AlertDialog alertDialogCreate = new AlertDialog.Builder(this).setCustomTitle(Ui.rtlDialogTitle(this,"ویرایش نوع شیفت")).setView(linearLayout).setPositiveButton("ذخیره", (DialogInterface.OnClickListener) null).setNegativeButton("انصراف", (DialogInterface.OnClickListener) null).create();
         alertDialogCreate.setOnShowListener(ShiftTypesActivity.createOnShowCallback10(this, alertDialogCreate, editTextInput, editTextInput2, profile, checkBoxCheck, iArr, iArr2, iArr3, checkBoxCheck2));
         alertDialogCreate.show();
     }

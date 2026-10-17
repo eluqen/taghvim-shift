@@ -84,7 +84,7 @@ public final class ShiftTypeEditor {
  private static void chooseColor(Activity a,int current,IntChanged cb){
   int checked=0;for(int i=0;i<COLORS.length;i++)if(COLORS[i]==current)checked=i;
   final int[] selected={checked};
-  new AlertDialog.Builder(a).setTitle("انتخاب رنگ").setSingleChoiceItems(FancyDialogs.single(a,COLOR_NAMES),checked,(d,w)->selected[0]=w)
+  new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"انتخاب رنگ")).setSingleChoiceItems(FancyDialogs.single(a,COLOR_NAMES),checked,(d,w)->selected[0]=w)
    .setPositiveButton("تأیید",(d,w)->cb.value(COLORS[selected[0]])).setNegativeButton("انصراف",null).show();
  }
  private static void resync(Activity a){
@@ -105,7 +105,7 @@ public final class ShiftTypeEditor {
    edit(a,code,true,done);
   });box.addView(add,new LinearLayout.LayoutParams(-1,dp(a,48)));
   ScrollView scroll=new ScrollView(a);scroll.addView(box);
-  host[0]=new AlertDialog.Builder(a).setTitle("مدیریت نوع‌های شیفت").setView(scroll).setPositiveButton("بستن",null).create();host[0].show();
+  host[0]=new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"مدیریت نوع‌های شیفت")).setView(scroll).setPositiveButton("بستن",null).create();host[0].show();
  }
  private static void edit(Activity a,String code,boolean fresh,Changed changed){
   try{
@@ -130,7 +130,7 @@ public final class ShiftTypeEditor {
    Runnable enable=()->{boolean on=work.isChecked()&&!fixedOff;from.setEnabled(on);to.setEnabled(on);reminder.setEnabled(on);if(!on)reminder.setChecked(false);};
    work.setOnCheckedChangeListener((v,on)->{working[0]=on;enable.run();});enable.run();
    ScrollView sc=new ScrollView(a);sc.addView(form);
-   AlertDialog dialog=new AlertDialog.Builder(a).setTitle(fresh?"افزودن نوع شیفت":"ویرایش "+oldTitle).setView(sc)
+   AlertDialog dialog=new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,fresh?"افزودن نوع شیفت":"ویرایش "+oldTitle)).setView(sc)
     .setPositiveButton("ذخیره",null).setNegativeButton("انصراف",null).create();
    if(code.startsWith("C")&&!fresh)dialog.setButton(DialogInterface.BUTTON_NEUTRAL,"حذف", (DialogInterface.OnClickListener)null);
    dialog.setOnShowListener(x->{

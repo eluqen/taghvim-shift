@@ -116,7 +116,7 @@ public final class ShiftExtras {
   working.setOnCheckedChangeListener((v,on)->{from.setEnabled(on);to.setEnabled(on);remind.setEnabled(on);if(!on)remind.setChecked(false);});
   from.setEnabled(false);to.setEnabled(false);remind.setEnabled(false);
   ScrollView scroll=new ScrollView(a);scroll.addView(form);
-  AlertDialog dialog=new AlertDialog.Builder(a).setTitle("افزودن شیفت سفارشی")
+  AlertDialog dialog=new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"افزودن شیفت سفارشی"))
    .setView(scroll).setNegativeButton("انصراف",null).setPositiveButton("ذخیره",null).create();
   dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(btn->{
    String name=title.getText().toString().trim(),shortLabel=shortName.getText().toString().trim();
@@ -139,11 +139,12 @@ public final class ShiftExtras {
  }
  private static void remove(Activity a,String code,LinearLayout list,View card){
   if(used(a).contains(code)){
-   new AlertDialog.Builder(a).setTitle("این شیفت در برنامه یا کارکرد استفاده می‌شود")
-    .setMessage("برای جلوگیری از تغییر ناخواسته تقویم، ابتدا این نوع را در چرخه‌های کاری و تعویض شیفت یا اضافه‌کاری ثبت‌شده جایگزین کنید.")
+   new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"این شیفت در برنامه یا کارکرد استفاده می‌شود"))
+    .setView(Ui.rtlDialogMessage(a,
+        "برای جلوگیری از تغییر ناخواسته تقویم، ابتدا این نوع را در چرخه‌های کاری و تعویض شیفت یا اضافه‌کاری ثبت‌شده جایگزین کنید."))
     .setPositiveButton("متوجه شدم",null).show();return;
   }
-  new AlertDialog.Builder(a).setTitle("حذف "+code+"؟")
+  new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"حذف "+code+"؟"))
    .setMessage("این نوع از فهرست حذف شود؟ این عملیات روی شیفت‌های سایر الگوها اثری ندارد.")
    .setNegativeButton("انصراف",null).setPositiveButton("حذف",(dialog,which)->{
     SharedPreferences.Editor e=state(a).edit();
@@ -199,7 +200,7 @@ public final class ShiftExtras {
    try{Object p=prefs("get",a,codes[i]);labels[i]=str(p,"title")+" ("+codes[i]+")";}
    catch(Exception e){labels[i]=codes[i];}
   }
-  new AlertDialog.Builder(a).setTitle("ساعت و یادآوری کدام شیفت؟").setAdapter(FancyDialogs.list(a,labels),(d,index)->editReminder(a,codes[index]))
+  new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"ساعت و یادآوری کدام شیفت؟")).setAdapter(FancyDialogs.list(a,labels),(d,index)->editReminder(a,codes[index]))
    .setNegativeButton("انصراف",null).show();
  }
  private static void editReminder(Activity a,String code){
@@ -214,7 +215,7 @@ public final class ShiftExtras {
    from.setOnClickListener(v->time(a,from,start,8,"شروع: "));to.setOnClickListener(v->time(a,to,end,16,"پایان: "));
    CheckBox remind=new CheckBox(a);remind.setText("یادآوری این نوع شیفت فعال باشد");
    remind.setChecked(bool(profile,"reminder"));remind.setEnabled(working);form.addView(remind);
-   new AlertDialog.Builder(a).setTitle("زمان و اعلان "+name).setView(form)
+   new AlertDialog.Builder(a).setCustomTitle(Ui.rtlDialogTitle(a,"زمان و اعلان "+name)).setView(form)
     .setNegativeButton("انصراف",null).setPositiveButton("ذخیره",(dialog,which)->{
      try{save(a,code,name,shortName,start[0],end[0],color,working,remind.isChecked());reschedule(a);}
      catch(Exception e){android.util.Log.e("ELUQEN_SHIFT","Reminder edit failed",e);Toast.makeText(a,"خطا در ذخیره",Toast.LENGTH_LONG).show();}
